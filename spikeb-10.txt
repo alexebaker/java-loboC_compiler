@@ -1,0 +1,184 @@
+SPIKE5B - LOBO-C MIPS CODE GENERATION - VERSION spike5b-10
+
+((s5b.0)) This is a normative spike5 document.  
+
+((s5b.0.1)) Key dates
+
+  ((s5b.0.1.1)) spike5b is due on MONDAY APRIL 16, 2018 AT 5PM.
+
+  ((s5b.0.1.2)) The spike5b code turn-in mechanism will be similar to
+             that of the previous spikes, and any significant changes
+             will be detailed in class.
+
+((s5b.1)) GOAL: spike5b outputs valid MIPS assembly code that
+implements the semantics of selected LOBO-C programs, as described
+herein.  spike5b will be tested using the 'tlc' testing framework is
+incorporated into this spec package.  
+
+((s5b.1.2)) Tool versions
+
+((s5b.1.2.1)) 'tlc' builds on the 'spim' MIPS simulator by James
+Larus.  We are using 'SPIM Version 8.0 of January 8, 2010' as provided
+by the lab machines.  
+
+  ((s5b.1.2.1.1)) Note, however, that tlc testing --- and LOBO-C
+  program semantics generally -- depends on using an ALTERNATE STARTUP
+  SEQUENCE, provided by the file 'loboc0.s' in the tlc distribution.
+
+((s5b.1.2)) The tlc package is implemented in Perl.  We are using Perl
+version 'v5.22.1' as provided by the lab machines.
+
+  ((s5b.1.2.1)) Implementors are advised to see the README.txt file in
+  the tlc distribution included in this spec package.
+
+((s5b.2)) IMPLEMENTATION SEQUENCE:  Although our LOBO-C language
+version is significantly restricted, generating correct code in all
+cases is challenging.  To facilitate incremental construction and
+testing, the tlc test cases for spike5b are arranged in groups,
+initially using only a restricted set of operators and language
+constructs, and later adding more, as described here.
+
+((s5b.2.1)) For purposes of code generation, there are five steps in
+the implementation sequence:
+
+((s5b.2.1.1)) ISEQ1: ARITHMETIC.  Generating valid MIPS/SPIM to
+              implement the following LOBO-C language components:
+
+  ((s5b.2.1.1.1)) Types: unsigned, signed, bool.  (No arrays or
+                  pointers in ISEQ1.)
+  ((s5b.2.1.1.2)) Unary operators: -
+  ((s5b.2.1.1.3)) Binary operators: +, -, *, /, ==, !=, <, <=, >, >=,
+                  and ',' (comma).
+  ((s5b.2.1.1.4)) Block structure: Nested blocks with nested
+                  declarations.  Shadowed variables.  Variable offsets
+                  and padding.
+
+((s5b.2.1.2)) ISEQ2: ASSIGNMENT.  Codegen for ISEQ1 plus: 
+  ((s5b.2.1.2.1)) Types: arrays.  (No pointers in ISEQ2.)
+  ((s5b.2.1.2.2)) Unary operators: --pre, ++pre, post--, post++, post[array]
+  ((s5b.2.1.2.3)) Binary operators: =
+
+((s5b.2.1.3)) ISEQ3: CONTROL.  Codegen for ISEQ2 plus:
+  ((s5b.2.1.3.1)) Binary operators: &&, ||
+  ((s5b.2.1.3.2)) Ternary operator: ?:
+  ((s5b.2.1.3.3)) Control structures: if, if/else, while
+
+((s5b.2.1.4)) ISEQ4: POINTERS.  Codegen for ISEQ3 plus:
+  ((s5b.2.1.4.1)) Types: [] (pointer) applied to any type
+  ((s5b.2.1.4.2)) Unary operators: [] (pointer dereference)
+
+((s5b.2.1.5)) ISEQ5: Implementor-extensions.  Content TBD.  
+  ((s5b.2.1.5.1)) NOTE: The DUE DATE, for step ISEQ5 only, is TO BE
+  DETERMINED but is guaranteed to be LATER than the value in
+  (s5b.0.1.1).
+
+((s5b.3)) VARIABLE LOCATIONS: LOBO-C variables are placed in memory
+using their variable offsets (as determined in spike5a) relative to
+the value of $gp supplied when the program starts.  (LOBO-C code
+SHOULD treat the value of $gp as READ-ONLY.)
+
+((s5b.4)) WHOLE-PROGRAM SEMANTICS: For a computer to be useful as
+something other than a space heater or a door stop, it MUST have some
+means of producing output.  For it to be super-duper useful, it SHOULD
+have means of accepting input as well.
+
+((s5b.4.1)) LOBO-C programs receive external input by having some of
+its variables preinitialized to non-zero values before the program
+begins to execute.  
+
+  ((s5b.4.1.1)) As far as the LOBO-C program is concerned, this
+  preinitialization happens in some unspecified way, and the program
+  can just immediately use its declared variables.  
+
+  ((s5b.4.1.2)) As far as the LOBO-C compiler implementor is
+  concerned, this preinitialization happens via the 'tlc' testing
+  framework, which accepts test cases describing values to be placed
+  in memory locations starting at $gp.
+
+((s5b.4.2)) A LOBO-C program produces a single 32 bit number -- called
+the 'PROGRAM OUTPUT VALUE' or POV -- as output.  The POV is entirely
+determined by the program and its inputs, and it has no particular
+interpretation other than that.  
+
+((s5b.4.2.1)) The POV of a LOBO-C program is defined to be the
+'statement value' (see (s5b.5)) of the last statement (in lexical
+order) in the program.  
+
+((s5b.4.2.2)) The runtime system surrounding a LOBO-C program
+execution ASSUMES that the POV is stored in MIPS register $v0 when the
+program returns.
+
+((s5b.5)) STATEMENT VALUES: For purposes of determine the POV
+(s5b.4.2) of a LOBO-C program, it helps to define the 'value' of any
+given LOBO-C statement.  This value is defined recursively based on
+the four types of statements in LOBO-C -- corresponding to the four
+alternatives in the STATEMENT grammar rule:
+
+  STATEMENT      <- "{" BLOCK "}" | EXPR ";" | IF_STMT | WHILE_STMT
+
+-- which are called a 'block statement', an 'expr statement', an 'if
+statement', or a 'while statement', respectively.
+
+((s5b.5.1)) The STATEMENT VALUE ('SV') of a statement S is defined
+as follows:
+
+  ((s5b.5.1)) If S is an expr statement, then SV(S) is the result
+  of the execution of EXPR.  Consider these examples:
+
+    ((s5b.5.1.1)) If S is '(2*3);', then SV(S) is 6; 
+    ((s5b.5.1.2)) If S is 'a = b+3;' and b=2, then SV(S) is 5; 
+    ((s5b.5.1.3)) If S is 'p++;' and p=6 before S, then SV(S) is 6; 
+    ((s5b.5.1.4)) If S is 'b?3:9;' and b=1, then SV(S) is 3; 
+
+  ((s5b.5.2)) If S is a block statement, then SV(S) is the value
+  of the last statement inside S, if any.  If S is empty or contains
+  only declarations, then SV(S) = 0.  Consider these examples:
+
+    ((s5b.5.2.1)) If S is '{1;2;3}', then SV(S) is 3; 
+    ((s5b.5.2.2)) If S is '{bool b; }, then SV(S) is 0; 
+    ((s5b.5.2.3)) If S is '{bool b; b=1; b+2;}' then SV(S) is 3; 
+    ((s5b.5.2.4)) If S is '{1;{2;3;{} 4;}}' then SV(S) is 4; 
+
+  ((s5b.5.3)) Given S is an if statement of the form 
+
+    'if (COND) THENSTMT OPTELSESTMT'
+
+  then SV(S) is SV(THENSTMT) if COND evaluates to a non-zero value.
+  Otherwise, if OPTELSESTMT is present, then SV(S) is
+  SV(OPTELSESTMENT), otherwise SV(S) = 0.
+
+  ((s5b.5.4)) If S is a while statement, then SV(S) = 0, unless
+  the while statement never terminates, in which case SV(S) is
+  undefined.
+
+
+((s5b.6)) EXAMPLE
+
+((s5b.6.1)) Consider the task of compiling this LOBO-C program into
+MIPS assembler:
+
+  signed a, b;
+  a+b;
+
+((s5b.6.1.1)) According to the spike5a rules, the variable offset for
+'a' is 0, and the variable offset for 'b' is 4.
+
+((s5b.6.2)) Here is one possible solution to that task, with
+explanatory comments:
+
+	.text            # Assemble in text section
+        .align 4         # Ensure 4 byte alignment
+        .globl main      # Declare entry point 'main'
+main:
+        lw $t0,0($gp)    # t0 = a
+        lw $t1,4($gp)    # t1 = b
+        addu $v0,$t0,$t1 # POV = a+b
+        jr $ra           # Return
+
+((s5b.7)) Unused reserved
+
+((s5b.8)) Unused reserved
+
+((s5b.9)) Spec revision history
+
+((s5b.9.1)) Version spike5b-10 released Sun Apr  8 05:52:47 2018 

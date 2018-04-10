@@ -1,0 +1,1814 @@
+: # use perl                                  -*- mode: Perl; -*-
+        eval 'exec perl -S -T -w $0 ${1+"$@"}'
+                if 0;
+
+use Carp;
+use File::Temp;
+my $version = v0.6;
+#v0.6: Sun Apr  8 06:13:16 2018 Fix in loboc0.s
+#v0.5: Sat Apr  7 17:35:31 2018 first released version
+#v0.4: minimal run use cases actually work
+#v0.3: take output as well as status
+#v0.2: tlc header redo
+#v0.1: existence
+
+=head1 NAME
+
+tlc - Test Lobo-C
+
+=head1 SYNOPSIS
+
+tlc [mode] [options] [test files and directories ...]
+
+ Major modes
+   -help                give brief help message
+   -man                 give full documentation
+   -version             give version number
+   -list                show available/selected tests
+   -test                run available/selected tests
+ 
+ Selection options
+   -recursive           automatically search subdirectories
+   -keep FIELD=REGEX    exclude each test _unless_ regex matches
+   -drop FIELD=REGEX    exclude each test _if_ regex matches
+   -group=NUM1,NUM2..   equivalent to '-keep group=(NUM1|NUM2..)'
+
+ Configuration options
+   -loboccompilercommand|c=CMD    use CMD to call the compiler under test
+   -spim=CMD            use CMD to run the simulator on test compiler output
+   -boots=PATH          load spim startup code from PATH instead of default
+   -allowmeta           allow shell metacharacters in the CMD value 
+   -timeout=NUM         wait up to NUM sec for compilation or execution to finish
+   -headerrange=NUM     search up to NUM bytes in file for //tlc header.
+   -x                   do not read any .tlcrc files during initialization
+
+ Options controlling output
+   -verbosity|v         increase amount of script output
+   -quiet               set the verbosity level to 0
+   -noneokay            exit 0 if no tests selected
+   -lines=LINES         limit stdout/stderr reporting to LINES lines
+   -bytes=BYTES         limit stdout/stderr reporting to BYTES bytes
+   -debug|d             increase script debugging level
+   -dsect=SEC1,SEC2..   debug output in sections SEC1, SEC2.. only
+   -bufferlimit=BYTES   limit internal stdout/stderr storage to BYTES bytes
+
+=head1 DESCRIPTION
+
+=over 4
+
+=back
+
+=head2 Major Modes
+
+=over 4
+
+=item B<-help>
+
+Prints brief help message to standard output.
+
+=item B<-man>
+
+Prints entire man page message to standard output.
+
+=item B<-version>
+
+Prints tlc version number to standard output.
+
+=item B<-list>
+
+Prints the names of all selected tests to standard output.
+B<-verbosity> can be used to increase the amount of detail printed.  
+
+=item B<-test>
+
+Runs all selected tests against the B<-loboccompilercommand>.  B<-verbosity> can
+be used to increase the amount of detail printed.  B<-quiet> can be
+used to suppress all output.  If there are errors in the command line
+switches, the script exits with status 255.  If no tests are selected,
+the script exits with status 254, unless the B<-noneokay> switch is
+specified.  
+
+Otherwise, the exit status from the script is given by the number of
+selected tests that were handled incorrectly, up to a maximum value of
+250.  If more than 250 tests were handled incorrectly, the script
+exits with status 253, regardless of the number of incorrect tests.
+
+=back
+
+=head2 Selection options
+
+=over 4
+
+=item [test files and directories ...]
+
+Add test files and directories to the test selection list.  The
+selection list starts out empty, but if no files or directories appear
+on the command line, the selection list defaults to just the current
+directory C<".">.
+
+If B<-recursive> is specified, then the script will also search for
+test files recursively in the subdirectories of all the directories on
+the command line (or recursively from C<./>, if no explicit files or
+directories are specified).
+
+=item B<-keep FIELD=REGEX>
+
+=item B<-drop FIELD=REGEX>
+
+Exclude files from the of the set of files considered as possible
+tests.  The set of files starts out including all (regular) files in
+all directories specified.  Use of -keep and/or -drop switches can
+only _reduce_ the size of that set.
+
+'-keep' means 'exclude unless':
+
+    For each file found in the directory list,
+    exclude it from further consideration _unless_
+    its FIELD value matches the regular expression
+    REGEX.
+
+'-drop' means 'exclude if': 
+
+    For each file found in the directory list,
+    exclude it from further consideration _if_ its
+    FIELD value matches the regular expression
+    REGEX.
+
+If multiple instances of -keep FIELD= or -drop FIELD= are supplied
+using the same FIELD, ONLY THE LAST ONE IS USED!
+
+That is a TERRIBLE IDEA but there we are.  tlc should be redesigned
+ASAP so that: Multiple instances of -keep FIELD and -drop FIELD
+switches are 'AND'ed together: A candidate must match ALL -keep FIELD
+patterns and NO -drop FIELD patterns to avoid being excluded.
+
+The filter table starts out empty, but if no -keep switch is supplied,
+the filter table defaults to '-keep filename=.*[.]loboc$', in other
+words, keep only files ending in '.loboc'.
+
+The FIELD keyword can be any of the keywords that can appear in a tlc
+header, such as:
+
+=over 4
+
+=item B<type>
+
+What kind of test this is.  Currently can be either B<build>, which
+just runs the compiler, or B<run>, which runs the compiler and then
+runs spim on the compiler output (assuming the compilation succeeded).
+So, e.g., B<-keep type=build> would retain only 'build' tests.
+
+=back
+
+In addition, the special field B<filename> can be used to match
+against the name (without any directory path) of the file currently
+being considered for selection.  For example,
+
+B<-keep filename="foo|bar">
+
+specifies that a file should be excluded unless its filename includes
+either 'foo' or 'bar' (or both).  For example, if the current set of
+candidate files were (foo.c, gah.c, test.barf, fo.o), then after
+filtering with B<-keep filename="foo|bar">, the set would be (foo.c,
+test.barf).
+
+=item B<-group=NUM1>
+
+=item B<-group=NUM1,NUM2..>
+
+=item B<-group=NUM1 -group NUM2..>
+
+Add group NUM1 (and NUM2, etc) to test selection list
+
+=back
+
+=head2 Configuration options
+
+=over 4
+
+=item B<-loboccompilercommand=CMD>
+
+=item B<-c=CMD>
+
+Use CMD to call the compiler under test.  CMD may be just a pathname,
+like C<../bin/loboSEE>, or it may contain arguments as well,
+like C<java -jar spike9.jar>.  In all cases, the first
+(whitespace-delimited) element of CMD is searched for in the user's
+default PATH, so, for example, the latter example will work only if
+C<java> can be found via $PATH.
+
+Default value: C<./loboc>.
+
+=item B<-spim=CMD>
+
+For tests that involve actually running compiled MIPS code output by
+the B<-c> compiler under test, run the 'spim' MIPS simulator at CMD.
+
+Default value: C<spim>, searched for in the user's default $PATH.
+
+=item B<-boots=PATH>
+
+Load LOBO-C pre-main startup code and exception handlers from PATH.
+Don't mess with this unless you know what you're doing.
+
+Default value: C<loboc0.s> in tlc's directory
+
+=item B<-allowmeta>
+
+Allow shell metacharacters, such as '$&<>[]', to be used in
+contexts--such as program names or data file names--where they might
+be executable by a shell program running as you.  Allowing that to
+happen can be a security risk if an untrusted person provides such
+input, so this option should not be set unless you need it.  Affects
+legal option values for the B<-c> and B<-spim> options, and the legal
+set of test file names.
+
+Default value: No shell metacharacters allowed.
+
+=item B<-timeout=NUM>
+
+Wait up to NUM seconds before declaring that a compilation attempt is
+never going to finish; or (with a separate allotment of up to NUM
+seconds) that the compiled code is never going to finish executing,
+for successfully compiled C<type: run> tests.
+
+Default value: 20 seconds
+
+=item B<-headerrange=NUM>
+
+Search up to the initial NUM bytes of files looking for C<//tlc>
+header comments.  If the header is not found by then, give up and
+assume the file is not a tlc test file.  This switch really shouldn't
+exist but problems have occurred with big regexes so there you go :(
+
+Default value: 10000 bytes
+
+=item B<-x>
+
+Suppress the normal searching for and loading of a C<.tlcrc> file.
+Without this switch, at startup tlc will check to see if C<./.tlcrc>
+(first choice) or C<$HOME/.tlcrc> (second choice) is readable.  
+
+If such a file exists, it must contain legal tlc command line
+arguments, one per line, that should be prepended to whatever
+arguments are actually provided explicitly on the command line.  Lines
+containing only whitespace, and lines beginning with C<#>, will be
+ignored.
+
+Note that only I<one> rc file will be read; if I<both> files are
+readable, only C<./.tlcrc> is loaded.
+
+Default value: Search for and load a C<.tlcrc> file if found.
+
+=back
+
+=head2 Options controlling output
+
+=over 4
+
+=item B<-verbosity>
+
+=item B<-v>
+
+Increase the script's general output level (can be repeated for
+potentially even more verbosity).  
+
+Default value: Verbosity level 1
+
+=item B<-quiet>
+           
+Set the verbosity level to 0, no matter how many
+-v's appeared on the command line
+
+Default value: Not quiet
+
+=item B<-noneokay>
+           
+Just exit with status code 0 if no tests are selected, rather than
+considering that to be an error.
+
+Default value: No tests selected is an error.
+
+=item B<-lines=LINES> 
+
+Show at most only the first LINES lines of text whenever stdout/stderr
+output from the compiler is to be shown.  B<-lines=0> implies no
+output; B<-lines=-1> implies no limit on output lines.
+
+Default value: 250 lines
+
+=item B<-bytes=BYTES> 
+
+Show at most only the first BYTES bytes of text whenever stdout/stderr
+output from the compiler is to be shown.  B<-bytes=0> implies no
+output, B<-bytes=-1> implies no limit on output.
+
+Default value: 2500 bytes
+
+=item B<-bufferlimit=BYTES> 
+
+Don't even try to buffer (let alone output) more than (approximately
+2*) BYTES of inbound stdout or stderr from a subprocess.  This should
+not normally have to be changed; it's meant as last-ditch
+damage-control when (e.g.) a spim subprocess is looping while
+generating (e.g., error) output.  In such cases, without some kind of
+B<-bufferlimit>, we can blow out our perl process memory space and die.
+
+Default value: 10000000 bytes
+
+=item B<-debug>
+
+Increase the script debugging level (can be repeated for potentially
+more output).
+
+Default value: No debug output
+
+
+=item B<-debug>
+
+Increase the script debugging level (can be repeated for potentially
+more output).
+
+Default value: No debug output
+
+=item B<-dsect=SECT1,SECT2 ..>
+
+=item B<-dsect=SECT1 -dsect=SECT2 ..>
+
+Select which major script sections should have debugging 
+output.  Possible sections are 
+
+=over 4
+
+INIT - startup related stuff
+
+SELECT - stuff related to selecting test files
+
+USE - stuff related to using selected test files
+
+TEST - stuff related to running tests
+
+=back
+
+Default value is the empty list, implying all sections. 
+
+=back
+
+=cut  
+
+# Stereotyped initialization code: figure out where we were executed from
+# and add that directory to the include path, load up the support code.
+# Must be in the special BEGIN subroutine because otherwise Perl tries
+# to find subsequent "use" commands before INC is set correctly.
+
+my $SCRIPTDIR;
+sub BEGIN {
+    # Seal us up a bit for living la vida tainted
+    $ENV{'PATH'} = "/bin:/usr/bin:/usr/local/bin";
+    delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
+
+    my ($dir) = ($0 =~ m!^(.*)/!);
+    if ($dir !~ m!^/!) {
+	my $tmp = `pwd`;
+	chop($tmp);
+    }
+    @INC=($dir, @INC)
+	unless $INC[0] eq $dir;
+    $SCRIPTDIR = $dir;
+}
+
+use Getopt::Long;               # For command line args
+use Pod::Usage;                 # For command line help
+use IO::File;                   # For new_tmpfile
+use IPC::Open3;                 # For open3..
+use Symbol qw(gensym);          # For gensym..
+
+
+# The global state object
+my %G;
+
+# The options we accept
+my @optionspecs =
+    ("version",
+     "help|h",
+     "man",
+     "list",
+     "test",
+     "group=i@",
+     "keep=s%",
+     "drop=s%",
+     "loboccompilercommand|c=s",
+     "spim=s",
+     "boots=s",
+     "headerrange=i",
+     "recursive",
+     "x",
+     "timeout=i",
+     "verbosity|v+",
+     "quiet",
+     "allowmeta",
+     "lines=i",
+     "bytes=i",
+     "bufferlimit=i",
+     "debug|d+",
+     "dsect=s@"
+     );
+my %optionpredefaults =
+    (
+     "verbosity" => 1,
+     );
+
+my %optionpostdefaults =
+    ("keep" => {},
+     "drop" => {},
+     "headerrange" => 10000,
+     "timeout" => 20,
+     "noneokay" => 0,
+     "debug" => 0,
+     "recursive" => 0,
+     "lines" => 250,
+     "bytes" => 2500,
+     "bufferlimit" => 10000000,
+     "dsect" => [],
+     "group" => [],
+     "quiet" => 0,
+     "allowmeta" => 0,
+     "loboccompilercommand" => "./loboc",
+     "spim" => "spim",
+     "boots" => "$SCRIPTDIR/loboc0.s"
+     );
+     
+my %Kid_Status;
+
+main();
+
+###################################
+# 
+# Mainline
+#
+
+sub main
+{
+    PushDSect("SCRIPT");
+
+    PushDSect("MAIN");
+    {
+        PushDSect("INIT");
+        OnceOnlyInit();
+        CommandLineArgs();
+        SanityCheckArgs();
+        PopDSect("INIT");
+    }
+    PopDSect("MAIN");
+
+    my $retval = ModeDispatch();
+
+    DP1("Exit status = $retval\n");
+
+    PopDSect("SCRIPT");
+
+    exit $retval;
+}
+
+
+###################################
+# 
+# Script debugging support
+#
+
+sub DP1 {DP(1,@_);}       # DP1 is most easily output debug stuff (one or more -debug's)
+sub DP2 {DP(2,@_);}
+sub DP3 {DP(3,@_);}
+sub DP4 {DP(4,@_);}
+sub DP5 {DP(5,@_);}       # DP5 is most detailed debug stuff
+
+my @dsect_stack;          # Tracks what 'debug sections' are open
+
+sub PushDSect {
+    push @dsect_stack, shift;
+# print("PTACK:".join(",",@dsect_stack)."\n");
+}
+sub PopDSect {
+    my $label = shift;
+
+    my $top = pop @dsect_stack;
+    croak "empty dsect stack"
+        unless $top;
+    if (defined($label)) {
+        croak "pop top was ($top) wanted ($label)"
+            unless $label eq $top;
+    }
+}
+
+sub IsDSect {
+    my $ret =
+        scalar(@{$G{"dsect"}}) == 0 ||
+        grep($_ eq $dsect_stack[@dsect_stack-1], @{$G{"dsect"}});
+# print("DSECT:(".join(",",@{$G{"dsect"}}).")\n");
+# print("STACK:(".join(",",@dsect_stack).")\n");
+
+    return $ret;
+}
+
+sub IsDP {              # True if current debug level >= $level
+    my $level = shift;
+
+    my $dbg = $G{"debug"};
+    defined($dbg) or ($dbg = 0);
+    return ($level <= $dbg);
+}
+
+sub DP {                # Output $message to STDERR if current verbosity >= $level
+    my ($level, $message) = @_;
+    if (IsDSect() && IsDP($level)) {
+        print STDERR $message;
+    }
+}
+
+###################################
+# 
+# Script 'verbosity' support
+#
+
+sub VP1 {VP(1,@_);}    # VP1 is most easily output stuff (and is default level)
+sub VP2 {VP(2,@_);}
+sub VP3 {VP(3,@_);}
+sub VP4 {VP(4,@_);}    # VP4 is most detailed output stuff
+
+sub IsVP {               # True if current verbosity >= $level
+    my $level = shift;
+    my $vb = $G{"verbosity"};
+    defined($vb) or ($vb = 0);
+    return ($level <= $vb);
+}
+
+sub VP {               # Output $message if current verbosity >= $level
+    my ($level, $message) = @_;
+
+    if (IsVP($level) || IsDP($level)) { # -debug implies -verbosity..
+        print STDOUT $message;
+    }
+}
+
+###################################
+# 
+# Command line arg handling
+#
+
+sub CommandLineArgs
+{
+
+    # We need to untaint the program name so that Pod::Usage can pass
+    # it to pod readers for formatting.  We'll rule out things looking
+    # like shell metacharacters and otherwise hope for the best.
+
+    my $name = UntaintNoShell($0);
+
+    defined($name)
+        or croak "Illegal character(s) in program name";
+
+    $G{"-input"} = $name;
+
+    foreach $k (keys %optionpredefaults) { 
+        $G{$k} = $optionpredefaults{$k};
+    }
+
+    # Unless suppressed, check for a '.tlcrc' file in ./ or in HOME
+    my $dorc = 1;
+    foreach (@ARGV) {
+        if ($_ eq "-x" || $_ eq "-X" ) { $dorc = 0; last; }
+    }
+
+    my $rcfile;
+    if ($dorc &&
+        ( -r ($rcfile = "./.tlcrc") ||
+          -r ($rcfile = "$ENV{HOME}/.tlcrc"))) {
+        
+        # print("reading leading options from $rcfile\n");
+
+        open( FH, $rcfile )
+            or croak "Can't open '$rcfile' even though we know it's there: $!";
+
+        my @default_opts;
+        while (<FH>) {
+            chomp;
+            if (/^\s*(\#|$)/) { next; }
+                
+            push @default_opts, $_;
+            # print("added ($_)\n");
+                
+        }
+        unshift( @ARGV, @default_opts );
+        close( FH );
+    }
+
+    # Do the main arg parsing 
+    if (&GetOptions(\%G, @optionspecs)==0) {
+        pod2usage(\%G);
+    }
+    
+    # Add default filter if nothing given
+    if (!defined($G{"keep"})) {
+        $G{"keep"} = { filename => '.*[.]loboc$' };
+    }
+
+    # Default other options
+    foreach $k (keys %optionpostdefaults) { 
+        defined($G{$k})
+            or ($G{$k} = $optionpostdefaults{$k});
+    }
+
+    # Expand ',' lists if any
+    @{$G{"dsect"}} =     split(/,/, join(',',@{$G{"dsect"}}));
+    @{$G{"group"}} =     split(/,/, join(',',@{$G{"group"}}));
+
+    # Propagate quietness
+    if ($G{"quiet"}) {
+        $G{"verbosity"} = 0;
+    }
+
+    # Default filesanddirs
+    $G{"filesanddirs"} = [];
+    if (@ARGV) {
+        $G{"filesanddirs"} = \@ARGV;
+    } else {
+        $G{"filesanddirs"} = ["."];
+    }
+}
+
+sub SanityCheckArgs
+{
+    # Mainly try to make sure the compiler and the simulator are
+    # available.  Don't die here if the simulator is missing, though
+    # -- wait until we encounter a test that actually needs it.
+
+    $G{"_havelcc_"} = FindProgram($G{"loboccompilercommand"}, 0);
+    DP2("_havelcc_ result is ($G{_havelcc_})\n");
+
+    $G{"_havespim_"} = FindProgram($G{"spim"}, 0);
+    DP2("_havespim_ result is ($G{_havespim_})\n");
+}
+
+sub FindProgram {
+    my ($prog, $reqd) = @_;
+
+    $_ = UntaintNoShellOverridable($prog);
+    my @cmdargs = split;      # Allow compiler args, e.g., -c='java -jar -etc loboc.jar'
+    my $cmd = $cmdargs[0];
+
+    DP4("FindProgram($prog,$reqd) 1st ($cmd)\n");
+
+    defined $cmd
+        or croak "Can't parse '$prog'";
+    my $file;
+    if (!($file = `which $cmd 2>/dev/null`)) {
+        if ($reqd) {
+            croak "Can't find `$cmd' -- need a (different) '-c=CMD' command line arg?";
+        }
+        return 0;
+    }
+    return 1;
+}
+
+sub ModeDispatch
+{
+    DP4 "In ModeDispatch\n";
+
+    if (OptionSet("help")) {
+        $G{"-verbose"} = 1;
+        pod2usage(\%G);
+        exit(0);
+    }
+
+    if (OptionSet("man")) {
+        $G{"-verbose"} = 2;
+        $G{"-exitval"} = 2;
+        pod2usage(\%G);
+    }
+
+    if (OptionSet("version")) {
+        printf "v%vd\n", $version;
+        exit(0);
+    }
+
+    if (OptionSet("list")) {
+        my @candidates = FindCandidates();
+        HandleCandidates(ListTest,SummarizeList,@candidates);
+        return $G{"_exitstatus_"};
+    }
+
+    if (OptionSet("test")) {
+        my @candidates = FindCandidates();
+        HandleCandidates(RunTest,SummarizeTests,@candidates);
+        return $G{"_exitstatus_"};
+    }
+
+    print STDERR "No mode specified, use '$G{-input} -help' for help\n";
+    exit(255);
+}
+
+###################################
+# 
+# Test dispatch
+#
+
+sub FindCandidates
+{
+    DP4 "In FindCandidates\n";
+
+    PushDSect("SELECT");
+
+    my ($handler,$summarizer) = @_;
+    my $d;
+
+    my @candidates;
+
+    foreach $d (@{$G{"filesanddirs"}}) {
+
+        DP2 "considering file/dir ($d)\n";
+
+        if (-f $d) {
+            DP2 " -- regular file\n";
+
+            my $path = "$d";
+
+            if (OKPreLoadTests($path)) {
+
+                push @candidates, $path;
+                next;
+            } else {
+                ++$td{"drop1"};
+                DP2 "failed preload ($path) - dropped\n";
+            }
+        }
+
+        if (-d $d) {
+
+            if ($d eq "..") {
+                next;
+            }
+
+            opendir DIR,$d
+                or croak "No such directory `$d': $!";
+
+            ++$td{"dirs"};
+            my $file;
+
+            my @files = sort(readdir DIR);
+            foreach $file (@files) {
+
+                my $path = "$d/$file";
+
+                DP3("in dir, considering ($path)\n");
+
+                if (-d $path) {
+
+                    DP3("($path) is dir\n");
+
+                    if ($file eq "." || $file eq "..") {
+                        DP3(" skipping . or ..\n");
+                        next;
+                    }
+
+                    if ($G{'recursive'}) {
+                        DP3("adding recursion ($path)\n");
+
+                        push @{$G{"filesanddirs"}}, $path;
+                        next;
+                    }
+
+                    ++$td{"drop1"};
+                    DP2 "failed preload ($path) - dropped\n";
+
+                    next;
+                }
+
+                if (-f $path) {
+
+                    if (OKPreLoadTests($path)) {
+                        DP3("adding file ($path)\n");
+                        push @candidates, $path;
+                    } else {
+                        ++$td{"drop1"};
+                        DP2 "failed preload ($path) - dropped\n";
+                    }
+                    next;
+                }
+
+            }
+        }
+    }
+
+    DP1 "candidates:\n".join("\n",@candidates)."\n";
+
+    PopDSect("SELECT");
+
+    return @candidates;
+}
+
+sub HandleCandidates
+{
+    PushDSect("USE");
+
+    my ($handler,$summarizer,@candidates) = @_;
+
+    my %td;
+
+    $td{"files"} = 0;
+    $td{"drop1"} = 0;
+    $td{"drop2"} = 0;
+    $td{"accepted"} = 0;
+    $td{"cases"} = 0;
+    $td{"reported"} = 0;
+    $td{"reportedincorrect"} = 0;
+
+    $td{"correct"} = 0;
+    $td{"incorrect"} = 0;
+    
+
+    foreach $path (@candidates) {
+
+        my ($dir,$file) = DirFile($path);
+
+        ++$td{"files"};
+
+        my $case = LoadTest($path);
+        if (!defined($case)) {
+            ++$td{"drop1"};
+            DP2 "not load/parseable - dropped\n";
+            next;
+        } else {
+            DP2 " loaded ";
+        }
+
+        $$case{"directory"} = $dir;
+        $$case{"filename"} = $file;
+                
+        if (TestIncludedContent($case)) {
+            ++$td{"accepted"};
+            $td{"cases"} += scalar @{$case->{'case'}};
+            
+            PushDSect("USE");
+            DP2 " dispatching\n ";
+            &$handler($case,\%td);
+            PopDSect("USE");
+        } else {
+            ++$td{"drop2"};
+        }
+    }
+    
+    VP3("Considered $td{files}: ".
+        "Dropped: $td{drop1} (early) + $td{drop2} (late); Accepted: $td{accepted}; Cases: $td{cases}\n");
+
+    if ($td{"cases"} == 0 && !$G{"noneokay"}) {
+        VP1("No tests selected!\n");
+        $G{"_exitstatus_"} = 254;
+    }
+
+    if (defined($summarizer)) {
+        &$summarizer(\%td);
+    }
+    PopDSect("USE");
+}
+
+###################################
+# 
+# Test framework
+#
+
+sub OKPreLoadTests {
+    my $path = shift;
+
+    my ($dir,$file) = DirFile($path);
+
+    if (!defined($file)) {
+        return 0;
+    }
+
+    DP3(" [PreLoad:");
+
+    if (-e $path) {
+        if (! -f $path) {
+            DP3("not a regular file] ");
+            return 0;
+        }
+    } else {
+        DP3("nonexistent] ");
+        return 0;
+    }
+
+    my $kref = $G{"keep"};
+    my $kpat = $$kref{"filename"};
+
+    if (defined $kpat) {
+        my $ret = $file =~ /$kpat/;
+        if (!$ret) {
+            DP3("keep ($kpat) says no] ");
+            return $ret;
+        }
+    }
+
+    my $dref = $G{"drop"};
+    my $dpat = $$dref{"filename"};
+
+    if (defined $dpat) {
+        my $ret = $file !~ /$dpat/;
+        if (!$ret) {
+            DP3("drop ($dpat) no: $file] ");
+            return $ret;
+        }
+    }
+
+    DP4(" succeeded] ");
+    return 1;
+}
+
+sub TestIncludedContent {
+    my $cref = shift;
+
+    DP4(" (keep: ");
+
+    my $kref = $G{"keep"};
+    foreach $k (keys %$kref) {
+        if ($k eq "filename") { # Already did that one
+            next;
+        }
+        
+        my $kval = $$cref{$k};
+        if (!defined($kval)) {
+            DP4("no ($k) - dropped)");
+            return 0;
+        }
+        my $kpat = $$kref{$k};
+        my $ret = $kval =~ /$kpat/;
+        if (!$ret) {
+            DP4("$k: $kval doesn't match '$kpat' - dropped)");
+            return 0;
+        }
+    }
+    DP4(") ");
+
+    DP4(" (drop: ");
+
+    my $dref = $G{"drop"};
+    foreach $k (keys %$dref) {
+        if ($k eq "filename") { # Already did that one
+            next;
+        }
+        
+        my $dval = $$dref{$k};
+        if (!defined($dval)) {
+            DP4("no ($k) - continue");
+            next;
+        }
+        my $dpat = $$dref{$k};
+        my $ret = $dval =~ /$dpat/;
+        if ($ret) {
+            DP4("$k: $dval matches '$dpat' - dropped");
+            return 0;
+        }
+    }
+    DP4(") ");
+    DP4(" NOT EXCLUDED ");
+    return 1;
+}
+
+sub LoadTest
+{
+    DP4("in LoadTest\n");
+
+    my $path = shift;
+    open(TESTCASE,"<$path")
+        or croak "Can't read '$path': $!";
+
+    # binmode TESTCASE;           # Avoid UTF warnings on binary files.
+
+    DP4("reading $path");
+
+    my $file = "";
+    my $chunk;
+
+    while (read TESTCASE,$chunk,10000) {
+        $file .= $chunk;
+
+        DP5(length($file).", ");
+    }
+    close TESTCASE;
+
+    DP4(" - done\n");
+
+    my %metadata =
+        (
+         "_contents_" => $file,
+         "_path_"     => $path,
+         "_header_"   => substr($file,0,$G{"headerrange"}),
+         "case"       => []
+         );
+
+    ParseTestCase(\%metadata);
+
+    DP4("parsed $path\n");
+
+    defined $metadata{"_parsed_"}
+        or return undef;
+
+    my $type = $metadata{"type"};
+    defined($type) and ($type =~ m/^(build|run)$/)
+        or die "$path:1: No '//tlc type: (build|run)' option found\n"; 
+
+    my $result = $metadata{"result"};
+
+    if ($type eq "build") {
+
+        defined($result) and ($result =~ m/^(pass|fail|report)$/)
+            or die "$path:1: No '//tlc result: (pass|fail|report)' option found for 'type: build'\b";
+
+    } elsif ($type eq "run") {
+        scalar(@{$metadata{"case"}}) > 0
+            or die "$path:1: No '//tlc case: out=in' option found for 'type: run'\n";
+    }
+
+    return \%metadata;
+}
+
+sub ListTest
+{
+    my ($metadata,$tdr) = @_;
+
+    my $dir = $$metadata{"directory"};
+    defined($dir) or croak "no dir";
+    my $name = $$metadata{"filename"};
+    defined($name) or croak "no name";
+
+    my $summary = $$metadata{"summary"};
+    defined($summary) or ($summary = "(no summary)");
+
+    my $type = $$metadata{"type"};
+    defined($type) or die "no type given";
+
+    my @cases = @{$metadata->{"case"}};
+    if ($type eq "run" && scalar(@cases) == 0) {
+        die "no cases found in '$dir$name'\n";
+    }
+
+    print "$dir$name:1:";
+    if ($type eq "run") {
+        VP1(" [$type:".unitize(scalar(@cases),"case")."]");
+    } else {
+        VP1(" [$type]");
+    }
+    VP2(" $summary");
+    print "\n";
+}
+
+sub unitize {
+    my ($num,$unit,$plural) = @_;
+    return "$num $unit" if $num == 1;
+    return "$num $plural" if defined $plural;
+    return "$num ${unit}s";
+}
+
+sub SummarizeList {
+
+    if (!IsVP(1)) { return; }
+        
+    my $tdr = shift;
+
+    my $text = "";
+
+    $text .= ">>>Tests = ";
+    $text .= unitize($$tdr{cases},"case");
+    $text .= " in ".unitize($$tdr{accepted},"test");
+    $text .= "\n";
+
+    VP1($text);
+}
+
+sub SummarizeTests {
+
+    if (!IsVP(1)) { return; }
+        
+    my $tdr = shift;
+
+    my $text = "";
+
+    my $ttests = $$tdr{accepted};
+
+    $text .= ">>>Tests $ttests = $$tdr{accepted}.";
+    $text .= " RUN[Correct = $$tdr{correct}, ";
+    $text .= "Incorrect = $$tdr{incorrect}] ";
+    if ($$tdr{reported} != 0 || $$tdr{reportedincorrect} != 0) {
+        $text .= " BUILD[Reported = $$tdr{reported}, ";
+        $text .= "Incorrect = $$tdr{reportedincorrect}] ";
+    }
+    $text .= "\n";
+
+    VP1($text);
+}
+
+sub ParseTestCase
+{
+    my $mref = shift;
+    my $path = $$mref{"_path_"};
+    my $data = $$mref{"_header_"};
+    my $found = 0;
+
+    DP5("about to regex\n");
+    while ($data =~ s!(^|[^/])//(.*)$!!m) {
+        my $cmt = $2;
+        if ($cmt =~ /^tlc\s*([^\s].*)$/s) {
+            $found = 1;
+            my $body = $1;
+            while ($body =~ s/^\s*(\w+):\s*(\S+)\s*//) {
+                my ($key,$val) = ($1,$2);
+                if (defined($mref->{$key})) {
+                    if (ref($mref->{$key}) eq 'ARRAY') {
+                        push @{$mref->{$key}}, $val;
+                    } else {
+                        die "Multiple values for key '$key' in '$data'";
+                    }
+                } else {
+                    $mref->{$key} = $val;
+                }
+            }
+            if ($body !~ /^\s*$/s) {
+                print STDERR "$path: Warning: unrecognized tlc comment contents '$body'\n";
+                return undef;
+            }
+        }
+    }
+    if ($found) {
+        $$mref{"_parsed_"} = 1;
+    }
+}
+
+sub RunTest {
+    my ($metadata,$tdr) = @_;
+
+    my $path = $$metadata{"_path_"};
+
+    my $summary = $$metadata{"summary"};
+    defined($summary) or ($summary = "(no summary)");
+
+    VP2("----Test $path: $summary----\n");
+
+    my $havelcc = $G{"_havelcc_"};
+    if (!$havelcc) {
+        die "Can't find LOBO-C compiler to test - bad or missing '-c=$G{loboccompilercommand}'?";
+    }
+
+    PushDSect("TEST");
+    TimedRun($metadata);
+    EvaluateRun($metadata,$tdr);
+    PopDSect("TEST");
+}
+
+###################################
+# 
+# Initialization
+#
+
+use Config;
+
+sub ConfigCheck {
+    my ($var,$val) = @_;
+    defined($val) or ($val = 'define');
+    return defined($Config{$var}) && $Config{$var} eq $val;
+}
+
+sub OnceOnlyInit
+{
+    # Make sure we think it's even worth trying..
+    
+    ConfigCheck('osname','linux')
+        or croak "This script only runs under linux, aborting";
+
+    ConfigCheck('d_open3')
+        or croak "This Perl installation doesn't provide the 'open3' call, aborting";
+
+    ConfigCheck('d_waitpid') or ConfigCheck('d_wait4')
+        or croak "This Perl installation doesn't support nonblocking wait, aborting";
+
+    # Install trap handlers
+
+    $SIG{CHLD} = \&REAPER;
+    $G{"_exitstatus_"} = 0;
+}
+
+###################################
+# 
+# Utilities
+#
+
+sub UntaintNoShell
+{
+    my $tainted = shift;
+    $tainted =~ /^([^!^&*()~|{};<>?\\\$\'\"\[\]]+)$/
+        or return undef;
+    return $1;
+}
+
+sub UntaintNoShellOverridable
+{
+    my $tainted = shift;
+    my $unt = UntaintNoShell($tainted);
+    defined ($unt)
+        and return $unt;
+
+    if ($G{"allowmeta"}) { # Sigh.  Take anything
+        $tainted =~ /^(.*)$/
+            or croak "anything didn't match tainted?";
+        $unt = $1;
+    } else {
+        croak "Shell metacharacters found in `$tainted' without -allowmeta switch";
+    }
+    return $unt;
+}
+
+sub DirFile {
+    my $path = shift;
+    if ($path =~ m!^(|.+/)([^/]+)$!) {
+        my ($dir,$file) = ($1,$2);
+        ($dir ne "") or ($dir = "./");
+        return ($dir,$file);
+    }
+    return undef;
+}
+
+sub OptionSet
+{
+    my $name = shift;
+    return defined($G{$name}) && $G{$name};
+}
+
+sub ClipOutput
+{
+    my $out = shift;
+    my $bytes = $G{"bytes"};
+    if ($bytes >= 0) {
+
+        if (length($out) > $bytes) {
+            $out = substr($out,0,$bytes);
+            $out .= "  ..(truncated at $bytes bytes)\n";
+        }
+    }
+
+    my $lines = $G{"lines"};
+    if ($lines >= 0) {
+        my @array = split("\n",$out,$lines+1);
+
+        if (@array > $lines) {
+            @array = @array[0..$lines];
+            push @array, "  ..(truncated at $lines lines)\n";
+            $out = join("\n",@array);
+        }
+    }
+    return $out;
+}
+
+###################################
+# 
+# Process handling stuff
+#
+
+use POSIX ":sys_wait_h";
+
+# This REAPER is straight out of 'man perlipc'..
+
+sub REAPER {
+    my $child;
+    # If a second child dies while in the signal handler caused by the
+    # first death, we won’t get another signal. So must loop here else
+    # we will leave the unreaped child as a zombie. And the next time
+    # two children die we get another zombie. And so on.
+    while (($child = waitpid(-1,&WNOHANG)) > 0) {
+        if (WIFEXITED($?)) {
+            $Kid_Status{$child} = $?;
+        }
+    }
+    $SIG{CHLD} = \&REAPER;  # still loathe sysV
+}
+
+sub TimedRun {
+    DP4("In TimedRun\n");
+    my $metadata = shift;
+
+    my $path = $$metadata{"_path_"};
+    $path = UntaintNoShellOverridable($path);
+
+    my $lobocfile = File::Temp->new (TEMPLATE => 'TLC-XXXXX', SUFFIX => '.loboc');
+    my $lobocfilename = $lobocfile->filename;
+    open HDL, "<", $path or die "Can't read '$path': $!";
+    while (<HDL>) {
+        s!^\s*//\s*tlc.*$!//tlc!;
+        print $lobocfile $_;
+    }
+    close HDL or croak "$!";
+
+    my $output = "";
+    my $output_suffix = "";
+    my $full_output = "";
+    my $full_err = "";
+
+    my $ccerr = "";
+    my $ccerr_suffix = "";
+    my $pid;
+    my $lccmd;
+
+    eval {
+        local $SIG{ALRM} = sub { die "TIMEOUT\n" };
+        alarm $G{"timeout"};
+
+        DP4("Alarm set\n");
+
+        my $arg = $G{"loboccompilercommand"};
+        $lccmd = UntaintNoShellOverridable($arg);
+
+        DP4("Args untainted\n");
+
+        local *CCSTDOUT = IO::File->new_tmpfile;
+        local *CCSTDERR = IO::File->new_tmpfile;
+
+        local *CCSTDIN = new IO::File $lobocfilename, "r";
+
+        defined(*CCSTDIN)
+            or die "INPUT failed";
+
+        DP4("going to open3 with:open3(<&CCSTDIN ($path), >&CCSTDOUT, >&CCERRFILE, $lccmd)\n");
+        $pid = open3("<&CCSTDIN", ">&CCSTDOUT", ">&CCSTDERR", "$lccmd");
+
+        if (!defined($pid)) {
+            die "FORK failed for '$lccmd $path'";
+        }
+
+        DP4("Ccomp opened ($pid)\n");
+
+        while (!defined($Kid_Status{$pid})) {
+            DP4("waiting for process to die (and get reaped)\n");
+            select(undef, undef, undef, 0.1);
+        }
+
+        $status = $Kid_Status{$pid};
+        DP4("Kid_Status{$pid} exists ($Kid_Status{$pid})\n");
+
+        $exitstatus = ($status>>8);
+        $signal = ($status&((1<<8)-1));
+
+        seek \*CCSTDERR, 0, 0;
+        seek \*CCSTDOUT, 0, 0;
+
+        while (<CCSTDERR>) {
+            AddRead(\$ccerr,\$ccerr_suffix,$_);
+            DP5(length($ccerr)."/".length($ccerr_suffix).", ");
+        }
+
+        $full_err = $ccerr.$ccerr_suffix;;
+        $ccerr = ClipOutput($full_err);
+
+        while (<CCSTDOUT>) {
+            AddRead(\$output,\$output_suffix,$_);
+            DP5(length($output)."/".length($output_suffix).", ");
+        }
+
+        $full_output = $output.$output_suffix;
+        $output = ClipOutput($full_output);
+
+        DP5("\n");
+        DP4("Read loop done\n");
+
+        DP4("eval done with ($exitstatus/$signal)\n");
+
+        alarm 0;
+        die "EXIT $exitstatus $signal\n";
+    };
+    die unless $@;
+
+    $$metadata{"_result_"} = $@;
+    chomp $$metadata{"_result_"};
+
+    if ($$metadata{"_result_"} =~ /^open3:/) {
+        die("Bad/missing '-c'? Can't run `$lccmd' -- $$metadata{_result_}");
+    }
+
+    # Let's not necessarily believe the sucker's dead yet
+    # Well, we still get the occasional zombie, barf.  I
+    # can't figure any way to avoid it.  'kill 0, $pid' says
+    # it's gone, but it's not..
+
+    DP4("postnuking supposedly dead ($pid) kid\n");
+    kill 9, $pid;
+
+#     if (kill 0, $pid) {     # If the kid still seems to be alive..
+
+#         DP4("supposedly dead ($pid) still alive\n");
+
+#         # Nudge him to stop the insanity..
+#         kill 3, $pid;
+#         sleep 2;
+            
+#         if (kill 0, $pid) {
+
+#             DP4("supposedly dead ($pid) STILL alive after kill 3\n");
+#             # We tried to be nice
+#             kill 9, $pid;
+#         } else {
+#             DP4("timed out ($pid) quit after kill 3\n");
+#         }
+#     }
+
+    $$metadata{"_stdout_"} = $output;
+    $$metadata{"_fulloutput_"} = $full_output;
+    DP1("output($$metadata{_stdout_})");
+
+    $$metadata{"_stderr_"} = $ccerr;
+    $$metadata{"_fullerror_"} = $full_err;
+
+    DP1("stderr($$metadata{_stderr_})");
+    DP1("got($$metadata{_result_})");
+}
+
+sub EvaluateRun
+{
+    my ($mref,$tdr) = @_;
+    my $did;
+    my $should;
+    my ($code,$status,$signal) = split(" ",$$mref{"_result_"});
+
+    my $isreport = 1; # ($$mref{"result"} eq "report");
+
+    if ($code eq "EXIT" && $status == 0 && $signal == 0) {
+        $did = "pass";
+    } elsif ($code eq "EXIT" && $status != 0 && $signal == 0) {
+        $did = "fail";
+    } elsif ($code eq "EXIT" && $signal != 0) {
+        $did = "sig$signal";
+    } else {
+        $did = $$mref{"_result_"};
+    }
+
+    my $running = 0;
+
+    if ($$mref{"type"} eq "build") {
+
+        if ($isreport) {
+            # All 'report' results must 'pass' as far as compilation goes..
+            $should = "pass";
+        } else {
+            $should = $$mref{"result"};
+        }
+
+    } else {
+
+       $$mref{"type"} eq "run"
+           or die("Unknown test type '$$mref{type}'");
+
+       # All 'run' tests must 'pass' as far as compilation goes..
+       $should = "pass";
+       $running = 1;
+    }
+
+    if ($did ne $should) {
+
+        if ($isreport) {
+            ++$$tdr{"reportedincorrect"};
+        } else {
+            ++$$tdr{"incorrect"};
+        }
+
+        BumpExitStatus();
+
+        my $code = 'B';
+
+        VP1("$$mref{_path_}:1: INCORRECT($code): Should get '$should', got '$did'\n");
+        VP3(" Input---\n$$mref{_contents_}\n---\n");
+        VP2("[STDOUT:\n$$mref{_stdout_}\n]\n");
+        VP2("[STDERR:\n$$mref{_stderr_}\n]\n");
+        return;
+    }
+
+    if (!$running) {
+        
+        if ($isreport) {
+
+            ++$$tdr{"reported"};
+
+            my $fname = "$$mref{_path_}";
+
+            VP1(" ==begin($fname)==\n$$mref{_contents_}\n ==end($fname)==\n");
+
+            my @es = split(" ",$$mref{_result_});
+            if ($es[0] ne "EXIT" || !defined($es[1]) || !defined($es[2])) {
+                VP1(" STATUS: $$mref{_result_}\n");
+            } else {
+                my $status = $es[1];
+                my $signal = $es[2];
+                my $eword;
+                if ($status == 0) { $eword = "OK"; }
+                else { $eword = "ERROR"; }
+                if ($signal==0) {
+                    VP1(" STATUS=$status ($eword)\n");
+                } else {
+                    VP1(" STATUS=$status ($eword), SIGNAL=$signal\n");
+                }
+            }
+
+            VP1(" STDOUT---\n$$mref{_stdout_}\n---\n");
+
+            if ($$mref{"_stderr_"} !~ /^\s*$/s) {
+                
+                VP1(" STDERR---\n$$mref{_stderr_}\n---\n");
+                
+            }
+            return;
+        }
+
+        ++$$tdr{"correct"};
+        VP2(" $$mref{_path_}: CORRECT\n");        
+        VP4(" Input---\n$$mref{_contents_}\n---\n");
+        VP4(" STDOUT---\n$$mref{_stdout_}\n---\n");
+        return;
+
+    } 
+
+    DP2("build okay.. going to run\n");
+    
+    for my $case (@{$mref->{case}}) {
+        my $correctanswer = ExecuteCompiledCase($mref,$case);
+        EvaluateExecution($mref,$tdr,$case,$correctanswer);
+    }
+}
+
+sub BumpExitStatus {
+    if ($G{"_exitstatus_"} < 250) {
+        ++$G{"_exitstatus_"};
+    }
+}
+
+sub TakeNumber {
+    my ($sr) = @_;
+    if ($$sr =~ s/^(t|f)//) {
+        return ((($1 eq "t") ? 1 : 0), 1);
+    }
+    $$sr =~ s/^([-+])?(0[xX])?([0-9a-fA-F]+)//
+        or die "Expected number at front of '$$sr'";
+    my ($optsgn,$opthex,$digs) = ($1,$2,$3);
+    $digs = hex $digs if defined $opthex;
+    $digs = $optsgn.$digs if defined $optsgn;
+    # Round-trip through s32 to normalize as signed
+    $digs = unpack('l', pack('l', $digs));
+    return ($digs, 4);
+}
+
+sub OptWSLiteral {
+    my ($sr,$val) = @_;
+    return $$sr =~ s/^\s*$val\s*//;
+}
+
+sub TakeWSLiteral {
+    my ($sr,$val) = @_;
+    OptWSLiteral($sr,$val)
+        or die "Expected '$val' at front of '$$sr'";
+}
+
+sub ExtendHex {
+    my ($xr,$len) = @_;
+    my $incr = $len-length($$xr);
+    $$xr .= "0"x$incr
+        if $incr > 0;
+}
+
+sub LittleHexify {
+    my ($num,$width) = @_;
+    my $str = "";
+    for (my $i = 0; $i < $width; ++$i) {
+        my $byte = $num&0xff;
+        $num >>= 8;
+        $str .= sprintf("%02x",$byte);
+    }
+    return $str;
+}
+
+sub ParseCaseSpec {
+    my ($spec) = @_;
+    my $sr = \$spec;
+    my $hexin = "";
+    my $hr = \$hexin;
+    # Peel off output
+    my ($answer,$size) = TakeNumber($sr);
+    TakeWSLiteral($sr,"=");
+    my $pos = 0;
+    while ($spec ne "") {
+        my ($num,$size) = TakeNumber($sr);
+        my $str = LittleHexify($num,$size);
+        $hexin .= $str;
+        last if $spec eq "";
+        TakeWSLiteral($sr,",");
+    }
+    return ($answer,$hexin);
+}
+
+sub ExecuteCompiledCase {
+
+    DP4("In ExecuteCompiledCase\n");
+    my ($mref,$case) = @_;
+
+    my $spimness = $G{"_havespim_"};
+    if (!$spimness) {
+        die "Can't find spim emulator - bad or missing '-spim=$G{spim}'?";
+    }
+
+    my $output = "";
+    my $spimerr = "";
+    my $pid;
+    my $spimcmd;
+
+    my $arg = $G{"spim"};
+    $spimcmd = UntaintNoShellOverridable($arg);
+    DP4("Arg untainted\n");
+
+    $arg = $G{"boots"};
+    $spimcmd .= " -exception_file ".UntaintNoShellOverridable($arg);
+
+    my $sfile = File::Temp->new (TEMPLATE => 'TLC-XXXXX', SUFFIX => '.s');
+    my $sfilename = $sfile->filename;
+
+    $spimcmd .= " -file $sfilename";
+
+    my ($answer,$hexin) = ParseCaseSpec($case);
+
+    $spimcmd .= " $hexin";
+
+    DP2("SPIM command line is '$spimcmd'\n");
+
+    print $sfile $$mref{"_fulloutput_"};
+    DP4("Wrote full output to $sfilename\n");
+
+    local *SPIMSTDIN = IO::File->new_tmpfile;
+    # do command line batch else exit syscalls don't exit?
+    # ..leave stdin empty
+    seek SPIMSTDIN, 0, 0;
+
+    local *SPIMSTDOUT = IO::File->new_tmpfile;
+    local *SPIMSTDERR = IO::File->new_tmpfile;
+
+    # Enter timed section
+    eval {
+        local $SIG{ALRM} = sub { die "TIMEOUT\n" };
+        alarm $G{"timeout"};
+
+        DP4("Alarm set\n");
+
+        DP4("going to open3(<&SPIMSTDIN, >&SPIMSTDOUT, >&SPIMSTDERR, $spimcmd)\n");
+
+        $pid = open3("<&SPIMSTDIN", ">&SPIMSTDOUT", ">&SPIMSTDERR", $spimcmd);
+
+        if (!defined($pid)) {
+            die "FORK failed for '$spimcmd'";
+        }
+
+        DP4("Spim opened ($pid)\n");
+
+        while (!defined($Kid_Status{$pid})) {
+            DP4("waiting for process to die (and get reaped)\n");
+            select(undef, undef, undef, 0.1);
+        }
+
+        $status = $Kid_Status{$pid};
+        DP4("Kid_Status{$pid} exists ($Kid_Status{$pid})\n");
+
+        $exitstatus = ($status>>8);
+        $signal = ($status&((1<<8)-1));
+
+        DP4("eval done with ($exitstatus/$signal)\n");
+
+        alarm 0;
+        die "EXIT $exitstatus $signal\n";
+    };
+    die unless $@;
+    $$mref{"_spimresult_"} = $@;
+    chomp $$mref{"_spimresult_"};
+
+    if ($$mref{"_spimresult_"} =~ /^open3:/) {
+        die("Bad/missing '-spim'? Can't run `$spimcmd' -- $$mref{_spimresult_}");
+    }
+
+    DP4("mref{_spimresult_} = '$$mref{_spimresult_}'\n");
+
+    if ($$mref{"_spimresult_"} eq "TIMEOUT") {
+
+        if (kill 0, $pid) {     # If the kid still seems to be alive..
+
+            DP4("timed out ($pid) still alive\n");
+
+            # Nudge him to stop the insanity..
+            kill 3, $pid;
+            sleep 2;
+            
+            if (kill 0, $pid) {
+
+                DP4("timed out ($pid) STILL alive after kill 3\n");
+                # We tried to be nice
+                kill 9, $pid;
+            } else {
+                DP4("timed out ($pid) quit after kill 3\n");
+            }
+        }
+    }
+
+    seek \*SPIMSTDERR, 0, 0;
+    seek \*SPIMSTDOUT, 0, 0;
+
+    while (<SPIMSTDERR>) {
+        $spimerr .= $_;
+    }
+
+    while (<SPIMSTDOUT>) {
+        $output .= $_;
+        DP5(length($output).", ");
+    }
+    DP5("\n");
+    DP4("Read loop done\n");
+
+    $$mref{"_spimstdout_"} = $output;
+    DP1("spimoutput($$mref{_spimstdout_})");
+
+    my $res32 = "";
+    if ($output =~ /.*<<([-0-9]+)>>$/) {
+        $res32 = $1;        
+    } else {
+        croak "lobocvalue not found in '$output'";
+    }
+
+    $$mref{"_lobocvalue_"} = $res32;
+
+    $$mref{"_spimstderr_"} = $spimerr;
+    DP1("spimstderr($$mref{_spimstderr_})");
+
+
+    DP1("spimgot($$mref{_spimresult_}/$$mref{_lobocvalue_})");
+    return $answer;
+}
+
+sub EvaluateExecution {
+    my ($mref,$tdr,$case,$correct32) = @_;
+    my $did;
+    my ($code,$status,$signal) = split(" ",$$mref{"_spimresult_"});
+    my $result32 = $$mref{"_lobocvalue_"};
+    my $should = $correct32 & 0x3f;
+
+    my $good = 0;
+
+    if ($code eq "EXIT" && $status == $should && $signal == 0 && $result32 == $correct32) {
+        
+        ++$$tdr{"correct"};
+        VP2(" $$mref{_path_}: CORRECT\n");        
+        VP4(" Input---\n$$mref{_contents_}\n---\n");
+        VP4(" Result---\n$$mref{_spimresult_}\n---\n");
+        return;
+
+    } else {
+
+        ++$$tdr{"incorrect"};
+        BumpExitStatus();
+
+        if ($code eq "TIMEOUT") {
+            $did = "TIMEOUT";
+        } elsif ($code eq "EXIT" && $signal == 0) {
+            $did = "'$status'";
+        } elsif ($code eq "EXIT" && $signal != 0) {
+            $did = "sig$signal";
+        } else {
+            $did = "UNRECOGNIZED: $$mref{_result_}";
+        }
+
+        VP1("$$mref{_path_}:1: INCORRECT(X): Should be $correct32 [$should], got $result32 [$did], for case '$case'\n");
+        VP3(" Input---\n$$mref{_contents_}\n---\n");
+        VP2("[STDOUT:\n$$mref{_stdout_}\n]\n");
+        VP2("[STDERR:\n$$mref{_stderr_}\n]\n");
+        return;
+    }
+}
+
+sub AddRead {
+    my ($mainref, $sufref, $newi) = @_;
+
+    if (length($newi) == 0) { return; }
+
+    DP4("AddRead($mainref,$sufref,".length($newi).")\n");
+
+    my $rl = $G{"bufferlimit"};
+
+    if (length($$mainref) > $rl) {
+        DP3("AddRead main overlen($rl)\n");
+
+        if (length($$sufref) > $rl) {
+            DP3("AddRead suffix overlen($rl)\n");
+            $$sufref = "\n\n..WARNING: TRUNCATED!  OUTPUT LOST HERE!..\n\n".substr($$sufref, $rl/2);
+        }
+        $$sufref .= $newi;
+    } else {
+        $$mainref .= $newi;
+        DP5("AddRead main okay ($rl), len now =".length($$mainref)."\n");
+    }
+}
+    
