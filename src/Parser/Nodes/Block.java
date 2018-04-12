@@ -143,4 +143,8 @@ public class Block extends ASTNode {
     public Location getLocation() {
         return null;
     }
+
+    public boolean isAssignable() {
+        return false;
+    }
 }

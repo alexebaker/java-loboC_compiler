@@ -25,6 +25,10 @@ public class AsgnExpr extends ASTNode {
         this.condExpr = condExpr;
     }
 
+    public ASTNode getCondExpr() {
+        return condExpr;
+    }
+
     @Override
     public String getASTR(int indentDepth, CompilerState cs) {
         StringBuilder str = new StringBuilder("");
@@ -49,8 +53,13 @@ public class AsgnExpr extends ASTNode {
         AsgnExpr asgnExpr = new AsgnExpr();
         asgnExpr.setCondExpr(CondExpr.parse(cs, st));
         if (tr.peek().getValue().equals("=")) {
-            tr.read();
-            asgnExpr.setAsgnExpr(AsgnExpr.parse(cs, st));
+            if (asgnExpr.getCondExpr().isAssignable()) {
+                tr.read();
+                asgnExpr.setAsgnExpr(AsgnExpr.parse(cs, st));
+            }
+            else {
+                throw new SyntaxError(tr.read(), "Assignable Expression");
+            }
         }
         return asgnExpr;
     }
@@ -111,5 +120,12 @@ public class AsgnExpr extends ASTNode {
             return condExpr.getLocation();
         }
         return null;
+    }
+
+    public boolean isAssignable() {
+        if (condExpr != null) {
+            return condExpr.isAssignable();
+        }
+        return false;
     }
 }

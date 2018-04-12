@@ -51,4 +51,8 @@ public class Number extends ASTNode {
     public Location getLocation() {
         return token.getLoc();
     }
+
+    public boolean isAssignable() {
+        return false;
+    }
 }

@@ -35,4 +35,8 @@ public class Term extends ASTNode {
     public Location getLocation() {
         return null;
     }
+
+    public boolean isAssignable() {
+        return false;
+    }
 }

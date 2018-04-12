@@ -105,4 +105,8 @@ public class ArraySpec extends ASTNode {
         }
         return null;
     }
+
+    public boolean isAssignable() {
+        return true;
+    }
 }

@@ -68,4 +68,8 @@ public class OptElse extends ASTNode {
         }
         return null;
     }
+
+    public boolean isAssignable() {
+        return false;
+    }
 }

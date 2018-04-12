@@ -57,6 +57,7 @@ public abstract class ASTNode {
     public abstract ASTNode foldConstants();
     public abstract Object getValue();
     public abstract Location getLocation();
+    public abstract boolean isAssignable();
 
     @Override
     public String toString() {

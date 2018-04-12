@@ -8,11 +8,13 @@ public class VDI {
     private Token name;
     private String status;
     private Type type;
+    private int offset;
 
     public VDI(Token name, String status, Type type) {
         this.name = name;
         this.status = status;
         this.type = type;
+        this.offset = 0;
     }
 
     public Token getName() {
@@ -21,6 +23,10 @@ public class VDI {
 
     public Type getType() {
         return type;
+    }
+
+    public int getOffset() {
+        return offset;
     }
 
     public void setType(Type type) {

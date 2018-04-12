@@ -155,4 +155,8 @@ public class CondExpr extends ASTNode {
         }
         return  null;
     }
+
+    public boolean isAssignable() {
+        return false;
+    }
 }

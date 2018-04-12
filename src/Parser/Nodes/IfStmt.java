@@ -138,4 +138,8 @@ public class IfStmt extends ASTNode {
         }
         return null;
     }
+
+    public boolean isAssignable() {
+        return false;
+    }
 }

@@ -109,4 +109,8 @@ public class WhileStmt extends ASTNode {
         }
         return null;
     }
+
+    public boolean isAssignable() {
+        return false;
+    }
 }

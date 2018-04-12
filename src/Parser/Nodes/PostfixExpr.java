@@ -128,4 +128,11 @@ public class PostfixExpr extends ASTNode {
         }
         return null;
     }
+
+    public boolean isAssignable() {
+        if (primaryExpr != null) {
+            return primaryExpr.isAssignable();
+        }
+        return false;
+    }
 }

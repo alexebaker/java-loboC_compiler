@@ -152,4 +152,8 @@ public class Operator extends ASTNode {
     public Location getLocation() {
         return getOp().getLoc();
     }
+
+    public boolean isAssignable() {
+        return false;
+    }
 }

@@ -204,4 +204,8 @@ public class Statement extends ASTNode {
         }
         return null;
     }
+
+    public boolean isAssignable() {
+        return false;
+    }
 }
