@@ -1,0 +1,206 @@
+SPIKE5A - LOBO-C VARIABLE OFFSET COMPUTATIONS - VERSION spike5a-10
+
+((s5a.0)) This is an informational document.  Although the complete
+spike5 specification will not be available until a later date, this
+document contains IMPLEMENTATION GOALS FOR THE DATES MARCH 31, 2018
+THROUGH APRIL 2, 2018, INCLUSIVE.
+
+((s5a.1)) GOAL: spike5a should extend spike4's to output VARIABLE
+OFFSETS as part of the VDIs output in the VSRs.
+
+((s5a.2)) The OFFSET of any variable 'X' depends on:
+
+  ((s5a.2.1)) All the variables that were _declared_before_ X in its
+  block, plus all the variables declared in all blocks enclosing X's
+  block, considered in lexical order,
+
+  ((s5a.2.2)) The _sizes_ of all those preceding variables, which is
+  determined by the _types_ of those variables (s5a.3),
+
+  ((s5a.2.3)) The _alignments_ of all those preceding variables, which
+  is also determined by the _types_ of those variables (s5a.4)
+
+  ((s5a.2.4)) The _lexical order_ of those variable declarations
+  which, along with the alignment, determines any necessary _padding_
+  between variables.
+
+((s5a.3)) DETERMINING VARIABLE SIZE FROM VARIABLE TYPE
+
+((s5a.3.1)) All sizes are measured in bytes.  The smallest possible
+size for a variable is one byte.  The largest size is unspecified
+except that:
+
+  ((s5a.3.1.1)) The MAXIMUM SPACE USED, which is the largest variable
+  offset plus the size of the variable with that offset, must fit in
+  a 32 bit unsigned binary number.  The LOBO-C compiler MAY, but is
+  NOT required to, detect violations of this condition.
+
+  ((s5a.3.1.2)) Smaller limits may be implied by any particular
+  machine (meaning in our case: spim).  The LOBO-C compiler is NOT
+  expected to detect possible violations of this condition.
+
+((s5a.3.2)) The size of a type is determined recursively according to
+these rules:
+
+  ((s5a.3.2.1)) If T is 'bool', size(T) = 1.
+
+  ((s5a.3.2.2)) If T is 'signed' or 'unsigned', size(T) = 4.
+
+  ((s5a.3.2.3)) If T is an array of size S of type X, size(T) = S*size(X).
+
+  ((s5a.3.2.4)) If T is a pointer to to type X, size(T) = 4.
+
+((s5a.3.3)) Consider these examples:
+
+  ((s5a.3.3.1)) size(bool) = 1.
+  ((s5a.3.3.2)) size(bool[3]) = 3.
+  ((s5a.3.3.3)) size(unsigned[5]) = 20.
+  ((s5a.3.3.4)) size(unsigned[5][]) = 4.
+  ((s5a.3.3.5)) size(bool[3][5]) = 15.
+  ((s5a.3.3.6)) size(signed[3][5][][2]) = 8.
+
+((s5a.4)) DETERMINING VARIABLE ALIGNMENT FROM VARIABLE TYPE
+
+((s5a.4.1)) The possible legal addresses for a variable are those that
+are even multiples of the _alignment_ of the variable's type.  The
+alignment of a type is determined recursively by these rules:
+
+  ((s5a.4.1.1)) If T is 'bool', alignment(T) = 1.
+
+  ((s5a.4.1.2)) If T is 'unsigned' or 'signed', alignment(T) = 4.
+
+  ((s5a.4.1.3)) If T is an array of size S of type X, alignment(T) =
+                alignment(X)
+
+  ((s5a.4.1.4)) If T is a pointer to type X, alignment(T) = 4.
+
+((s5a.4.2)) Consider these examples:
+
+  ((s5a.4.2.1)) alignment(bool) = 1. alignment(signed) = 4. alignment(unsigned) = 4.
+  ((s5a.4.2.2)) alignment(bool[3]) = 1.
+  ((s5a.4.2.3)) alignment(unsigned[5]) = 4.
+  ((s5a.4.2.4)) alignment(bool[2][]) = 4.
+  ((s5a.4.2.5)) alignment(bool[3][5]) = 1.
+  ((s5a.4.2.6)) alignment(bool[3][5][][2]) = 4.
+
+((s5a.5)) COMPUTING A VARIABLE'S OFFSET
+
+((s5a.5.1)) The the offset of a given variable X can be computed by
+determining all the variables that are 'declared before' X both within
+its own block and any enclosing blocks, and then recursively
+determining each variable offset in terms of the previous variable.
+
+ ((s5a.5.1.1)) If variable X is immediately 'declared before' variable
+ Y, let offsetX = offset(X), let sizeX = size(X), and let alignY =
+ alignment(Y).  If Y is the very first variable in the file, let
+ offsetX = sizeX = 0.  Then:
+
+  offset(Y) = (offsetX + sizeX + alignY - 1) / alignY * alignY
+
+ ((s5a.5.1.2)) The portions of that computation involving alignY are
+ computing the 'padding' (i.e., wasted bytes), if any, between the
+ storage for variable X and variable Y.
+
+((s5a.5.2)) Here is a complete worked example, for the input:
+
+signed v1; bool[2] v2; { unsigned v31, u32; } { bool v41; signed[] v42; }
+
+((s5a.5.2.1)) For v1, there is no previous variable X, so offsetX = 0
+              and sizeX = 0.  Also, alignY = align(signed) = 4.  So
+
+   offset(v1) = (offsetX + sizeX + alignY - 1) / alignY * alignY
+   offset(v1) = (   0    +   0   +   4    - 1) /   4    *   4
+   offset(v1) = (             3              ) /   4    *   4
+   offset(v1) =                                    0    *   4
+   offset(v1) = 0
+
+((s5a.5.2.2)) For v2, X = v1, so offsetX = offset(v1) = 0,
+                                 sizeX = size(signed) =  4, and
+                                 alignY = align(bool[2]) = 1
+
+   offset(v2) = (offsetX + sizeX + alignY - 1) / alignY * alignY
+   offset(v2) = (   0    +   4   +   1    - 1) /    1   *    1
+   offset(v2) = (              4             ) /    1   *    1
+   offset(v2) = 4
+
+((s5a.5.2.3)) For v31, X = v2, so offsetX = offset(v2) = 4,
+                                  sizeX = size(bool[2]) = 2, and
+                                  alignY = align(unsigned) = 4
+
+   offset(v31)= (offsetX + sizeX + alignY - 1) / alignY * alignY
+   offset(v31)= (   4    +   2   +   4    - 1) /    4   *    4
+   offset(v31)= (              9             ) /    4   *    4
+   offset(v31)=                                2        *    4
+   offset(v31)= 8
+
+
+((s5a.5.2.4)) For u32, X = v31, so offsetX = offset(v31) = 8,
+                                  sizeX = size(unsigned) = 4, and
+                                  alignY = align(unsigned) = 4
+
+   offset(u32)= (offsetX + sizeX + alignY - 1) / alignY * alignY
+   offset(u32)= (   8    +   4   +   4    - 1) /    4   *    4
+   offset(u32)= (             15             ) /    4   *    4
+   offset(u32)=                                3        *    4
+   offset(u32)= 12
+
+((s5a.5.2.5)) For v41, X = v2, so offsetX = offset(v2) = 4,
+                                  sizeX = size(bool[2]) = 2, and
+                                  alignY = align(bool) = 1
+
+   offset(v41)= (offsetX + sizeX + alignY - 1) / alignY * alignY
+   offset(v41)= (   4    +   2   +   1    - 1) /    1   *    1
+   offset(v41)= (             6              ) /    1   *    1
+   offset(v41)= 6
+
+((s5a.5.2.6)) For v42, X = v41, so offsetX = offset(v41) = 6,
+                                  sizeX = size(bool) = 1, and
+                                  alignY = align(signed[]) = 4
+
+   offset(v42)= (offsetX + sizeX + alignY - 1) / alignY * alignY
+   offset(v42)= (   6    +   1   +   4    - 1) /    4   *    4
+   offset(v42)= (            10              ) /    4   *    4
+   offset(v42)=                                2        *    4
+   offset(v42)= 8
+
+
+((s5a.5.2.7)) Additional notes about the example:
+
+((s5a.5.2.7.1)) What's declared before (the 'X') v41 is v2, not u32.
+
+((s5a.5.2.7.2)) Both v31 and v41 are declared immediately after v2,
+                but they have different offsets.
+
+
+((s5a.6)) MODIFIED OUTPUT FORMAT FOR SPIKE5A
+
+((s5a.6.1)) For spike5a, add a space and the appropriate variable
+offset to each VDI line in the per-block VSRs.  Continuing the example
+(s5a.5.2) above:
+
+v1 unused signed 0
+v2 unused bool[2] 4
+
+{ u32 unused unsigned 12
+  v31 unused unsigned 8
+  
+  }
+{ v41 unused bool 6
+  v42 unused signed[] 8
+  
+  }
+
+((s5a.6.2)) Additional notes about this example:
+
+((s5a.6.2.1)) Note that 'u32' is output before 'v32, following
+spike4's _lexicographic_ ordering of variable _names_ in the VSR, even
+though its offset (12) is larger than v32's (8), due to spike5a's
+_lexical_ ordering of variable _declarations_ in offset computations.
+
+((s5a.7)) Unused reserved
+
+((s5a.8)) Unused reserved
+
+((s5a.9)) Spec revision history
+
+((s5a.9.1)) Version spike5a-10 released Sat Mar 31 05:58:29 2018 
