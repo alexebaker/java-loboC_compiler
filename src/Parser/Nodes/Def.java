@@ -1,5 +1,6 @@
 package Parser.Nodes;
 
+import Errors.Error;
 import Errors.SyntaxError;
 import Tokenizer.TokenReader;
 import Tokenizer.Tokens.IdentifierToken;
@@ -53,7 +54,7 @@ public class Def extends ASTNode {
         return str.toString();
     }
 
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         Def def = new Def();
         def.setTypeSpec(TypeSpec.parse(cs, st));

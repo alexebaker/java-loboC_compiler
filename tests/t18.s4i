@@ -1,0 +1,1 @@
+bool a; bool[2*3] b; bool[] c; a=4/(1+2); c=&b[3]; c[] = a;

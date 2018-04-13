@@ -1,0 +1,19 @@
+a okay signed
+b okay signed
+c okay signed
+d unused unsigned
+e unused unsigned
+f unused unsigned
+g okay bool
+h unused bool
+i unused bool
+j okay signed[5][]
+p okay signed[]
+
+ S:( S:1= S:3);
+ undef:( S:a=( S:1[ S:2]));
+ undef:( S:a=( S:b[ S:c]));
+ undef:( S:a= undef:( B:g+ S:1));
+ B:( B:g= S:a);
+ undef:( S:a=( undef:( S[5][]:j[ S:10])[]));
+ undef:( S[]:p= S[5][]:j);

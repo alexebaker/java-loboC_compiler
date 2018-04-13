@@ -1,6 +1,6 @@
 package Parser.Nodes;
 
-import Errors.SyntaxError;
+import Errors.Error;
 import Errors.TypeError;
 import Parser.Operators.Operator;
 import Parser.Operators.PostunOp;
@@ -53,7 +53,7 @@ public class PostfixExpr extends ASTNode {
         return str.toString();
     }
 
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         ASTNode node = null;
         if (PrimaryExpr.beginsPrimaryExpr(tr.peek())) {
@@ -84,7 +84,7 @@ public class PostfixExpr extends ASTNode {
                     type = type.deRef();
                     if (type != null && arraySpec.getValue() != null) {
                         try {
-                            if (((int) arraySpec.getValue()) >= ((ArrayType) type).getSize()) {
+                            if (((int) arraySpec.getValue()) >= ((ArrayType) type).getArraySize()) {
                                 setType(new Type(TypeEnum.UNDEF));
                                 String msg = "Array index out of bounds!";
                                 cs.addError(new TypeError(msg, primaryExpr.getLocation()));
@@ -109,28 +109,28 @@ public class PostfixExpr extends ASTNode {
     public ASTNode foldConstants() {
         if (primaryExpr != null) {
             primaryExpr = primaryExpr.foldConstants();
-            if (arraySpec != null) arraySpec = arraySpec.foldConstants();
-            if (postfixExpr != null) postfixExpr = postfixExpr.foldConstants();
+            arraySpec = arraySpec != null ? arraySpec.foldConstants() : null;
+            postfixExpr = postfixExpr != null ?  postfixExpr.foldConstants() : null;
         }
         return this;
     }
 
     public Object getValue() {
-        if (primaryExpr != null) {
-            primaryExpr.getValue();
-        }
-        return null;
+        return primaryExpr != null ? primaryExpr.getValue() : null;
     }
 
     public Location getLocation() {
-        if (primaryExpr != null) {
-            return primaryExpr.getLocation();
-        }
-        return null;
+        return primaryExpr != null ? primaryExpr.getLocation() : null;
     }
 
     public boolean isAssignable() {
         if (primaryExpr != null) {
+            if (postfixExpr != null) {
+                return primaryExpr.isAssignable() && postfixExpr.isAssignable();
+            }
+            else if (arraySpec != null) {
+                return primaryExpr.isAssignable() && arraySpec.isAssignable();
+            }
             return primaryExpr.isAssignable();
         }
         return false;

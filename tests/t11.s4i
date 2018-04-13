@@ -1,0 +1,23 @@
+signed a,b,c,e;
+signed[3] d;
+signed[] p;
+d[2] = a+3;
+p = &e;
+p[] = 0;
+++p[];
+p[]--;
+if ((d[2] = a+3)>8) 
+   { 
+    unsigned c,e;
+    unsigned[9] d;
+    unsigned[9][] dp;
+    c = a = b--;
+    d[3] = e+c;
+    dp = & d;
+    dp[][7]--;
+}
+b = d[2];
+++a;
+if (a > b) if (c > d[0]) d[1] = a; else b = c;
+--a;
+

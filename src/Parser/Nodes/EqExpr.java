@@ -1,6 +1,6 @@
 package Parser.Nodes;
 
-import Errors.SyntaxError;
+import Errors.Error;
 import Parser.Operators.EqOp;
 import Parser.Operators.Operator;
 import Tokenizer.TokenReader;
@@ -8,7 +8,7 @@ import Compiler.*;
 import Types.Type;
 
 public class EqExpr extends ASTNode {
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         ASTNode node = RelExpr.parse(cs, st);
         while (EqOp.isOp(tr.peek())) {

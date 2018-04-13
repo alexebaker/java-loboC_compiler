@@ -1,0 +1,15 @@
+signed a,b,c;
+unsigned d,e,f;
+bool g,h,i;
+signed[5][] j;
+signed[] p;
+
+1 = 3;
+a = 1[2];
+a = b[c];
+
+a = g + 1;
+g = a;
+
+a = j[10][];
+p = j;

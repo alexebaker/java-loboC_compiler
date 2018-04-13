@@ -1,6 +1,6 @@
 package Parser.Nodes;
 
-import Errors.SyntaxError;
+import Errors.Error;
 import Errors.TypeError;
 import Tokenizer.TokenReader;
 import Compiler.*;
@@ -48,7 +48,7 @@ public class AsgnExpr extends ASTNode {
         return str.toString();
     }
 
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         AsgnExpr asgnExpr = new AsgnExpr();
         asgnExpr.setCondExpr(CondExpr.parse(cs, st));
@@ -58,7 +58,8 @@ public class AsgnExpr extends ASTNode {
                 asgnExpr.setAsgnExpr(AsgnExpr.parse(cs, st));
             }
             else {
-                throw new SyntaxError(tr.read(), "Assignable Expression");
+                String msg = "'" + asgnExpr.toString() + "' is not assignable";
+                throw new TypeError(msg, tr.read().getLoc());
             }
         }
         return asgnExpr;
@@ -123,9 +124,8 @@ public class AsgnExpr extends ASTNode {
     }
 
     public boolean isAssignable() {
-        if (condExpr != null) {
-            return condExpr.isAssignable();
-        }
-        return false;
+        condExpr = condExpr != null ?  condExpr.foldConstants() : null;
+        asgnExpr = asgnExpr != null ? asgnExpr.foldConstants() : null;
+        return condExpr != null && asgnExpr != null && condExpr.isAssignable();
     }
 }

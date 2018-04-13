@@ -1,0 +1,9 @@
+signed a,b,c,e;
+signed[3] d;
+d[a=2,b=1,a-b] = a+3;
+{ unsigned c,f;
+ unsigned[9] d;
+ d[3] = a+c;
+}
+b = d[2];
+++a;

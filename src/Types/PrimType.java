@@ -6,6 +6,25 @@ public class PrimType extends Type {
         super(typeEnum);
     }
 
+    @Override
+    public int getSize() {
+        if (getTypeEnum() == TypeEnum.BOOL) {
+            return 1;
+        }
+        else if (getTypeEnum() == TypeEnum.SIGNED || getTypeEnum() == TypeEnum.UNSIGNED) {
+            return 4;
+        }
+        return 0;
+    }
+
+    @Override
+    public int getAlignment() {
+        if (getTypeEnum() == TypeEnum.SIGNED || getTypeEnum() == TypeEnum.UNSIGNED) {
+            return 4;
+        }
+        return 1;
+    }
+
     public static boolean isType(Type type) {
         return type != null && PrimType.isType(type.getTypeEnum());
     }

@@ -1,0 +1,1 @@
+signed a,b,c; { bool b, c; a = b; } a = c;

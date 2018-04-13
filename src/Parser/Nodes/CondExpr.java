@@ -1,5 +1,6 @@
 package Parser.Nodes;
 
+import Errors.Error;
 import Errors.SyntaxError;
 import Tokenizer.TokenReader;
 import Compiler.*;
@@ -50,7 +51,7 @@ public class CondExpr extends ASTNode {
         return str.toString();
     }
 
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         CondExpr condExpr = new CondExpr();
         condExpr.setLogOrExpr(LogOrExpr.parse(cs, st));
@@ -157,6 +158,12 @@ public class CondExpr extends ASTNode {
     }
 
     public boolean isAssignable() {
+        if (logOrExpr != null) {
+            if (expr != null && condExpr != null) {
+                return false;
+            }
+            return logOrExpr.isAssignable();
+        }
         return false;
     }
 }

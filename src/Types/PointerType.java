@@ -6,6 +6,16 @@ public class PointerType extends Type {
     }
 
     @Override
+    public int getSize() {
+        return 4;
+    }
+
+    @Override
+    public int getAlignment() {
+        return 4;
+    }
+
+    @Override
     public String toString() {
         StringBuilder str = new StringBuilder("");
         str.append(super.toString());

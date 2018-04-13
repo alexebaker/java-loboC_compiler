@@ -1,5 +1,6 @@
 package Parser.Nodes;
 
+import Errors.Error;
 import Errors.SyntaxError;
 import Errors.TypeError;
 import Tokenizer.TokenReader;
@@ -60,7 +61,7 @@ public class ArraySpec extends ASTNode {
         return str.toString();
     }
 
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         if (tr.peek().getValue().equals("[")) {
             tr.read();

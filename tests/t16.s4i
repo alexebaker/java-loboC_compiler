@@ -1,0 +1,2 @@
+signed a; unsigned b; bool c;
+b = a = c = 1;

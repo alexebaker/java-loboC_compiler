@@ -1,0 +1,13 @@
+signed a;
+bool b;
+a=(1-2)*3;
+b = 2>3;
+if (2<3) ++a; else b = 0;
+if (1-1*(2/2)) a--; else a++;
+
+if (1)
+   if (2/3) a=3;
+   else while (b) { b = 0; }
+
+if (0) b=0;
+

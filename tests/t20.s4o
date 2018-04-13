@@ -1,0 +1,11 @@
+v1 unused signed 0
+v2 unused bool[2] 4
+
+{ u32 unused unsigned 12
+  v31 unused unsigned 8
+
+  }
+{ v41 unused bool 6
+  v42 unused signed[] 8
+
+  }

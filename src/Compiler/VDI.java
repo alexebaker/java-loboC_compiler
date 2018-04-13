@@ -9,12 +9,18 @@ public class VDI {
     private String status;
     private Type type;
     private int offset;
+    private VDI parent;
 
     public VDI(Token name, String status, Type type) {
+        this(name, status, type, null);
+    }
+
+    public VDI(Token name, String status, Type type, VDI parent) {
         this.name = name;
         this.status = status;
         this.type = type;
-        this.offset = 0;
+        this.parent = parent;
+        this.offset = calcOffset(type, parent);
     }
 
     public Token getName() {
@@ -27,6 +33,10 @@ public class VDI {
 
     public int getOffset() {
         return offset;
+    }
+
+    public VDI getParent() {
+        return parent;
     }
 
     public void setType(Type type) {
@@ -55,6 +65,9 @@ public class VDI {
         else {
             str.append("unknown");
         }
+
+        str.append(" ");
+        str.append(offset);
         return str.toString();
     }
 
@@ -73,5 +86,12 @@ public class VDI {
     @Override
     public int hashCode() {
         return (name.hashCode() * status.hashCode() - type.hashCode()) * 27;
+    }
+
+    private int calcOffset(Type type, VDI parent) {
+        int offsetX = parent == null ? 0 : parent.getOffset();
+        int sizeX = parent == null ? 0 : parent.getType().getSize();
+        int alignY = type.getAlignment();
+        return (offsetX + sizeX + alignY - 1) / alignY * alignY;
     }
 }

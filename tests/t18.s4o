@@ -1,0 +1,7 @@
+a okay bool
+b okay bool[6]
+c okay bool[]
+
+ B:( B:a= S:1);
+ B[]:( B[]:c= B[]:(& B:( B[6]:b[ S:3])));
+ B:( B:( B[]:c[])= B:a);

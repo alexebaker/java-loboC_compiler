@@ -1,13 +1,13 @@
 package Parser.Nodes;
 
-import Errors.SyntaxError;
+import Errors.Error;
 import Parser.Operators.Operator;
 import Tokenizer.TokenReader;
 import Compiler.*;
 import Types.Type;
 
 public class LogOrExpr extends ASTNode {
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         ASTNode node = LogAndExpr.parse(cs, st);
         while (tr.peek().getValue().equals("||")) {

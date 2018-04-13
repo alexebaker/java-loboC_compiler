@@ -1,0 +1,14 @@
+a okay signed
+b okay bool
+c okay unsigned[5][]
+p okay signed[]
+pp okay signed[][]
+
+ B:( B:b= B:1);
+ S:( S:a= S:2);
+ S:( S:a= U:( U[5]:( U[5][]:c[ S:4])[]));
+ S[]:( S[]:p= S[]:(& S:a));
+ S[][]:( S[][]:pp= S[][]:(& S[]:p));
+ S[]:( S[]:p= S[]:( S[][]:pp[]));
+ S[][]:( S[][]:pp= S[][]:(& S[]:(& S:a)));
+ S:( S:a= S:( S[]:( S[][]:pp[])[]));

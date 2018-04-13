@@ -1,0 +1,35 @@
+UNUSED unused bool
+a okay signed
+b okay signed
+c okay unsigned
+d okay unsigned
+e okay bool
+f okay bool
+
+ S:( S:a= S:1);
+ S:( S:b= S:a);
+ U:( U:c= S:2);
+ U:( U:c= U:d);
+ B:( B:e= S:1);
+ B:( B:f= S:0);
+ B:( B:e= B:f);
+ U:( S:a+ U:c);
+ U:( U:c+ S:b);
+ S:( S:a= U:c);
+ U:( U:c= S:b);
+ B:( S:a== S:1);
+ B:( B:e!= B:f);
+ B:( U:c>= U:d);
+ B:( B:( S:a== S:b)!= B:( U:c== U:d));
+ B:( S:a< S:( S:b= U:c));
+{ d okay bool[3]
+  e okay signed
+  other unused signed
+  
+   S:( S:e= S:( S:a+ S:b));
+   B:( B:( B[3]:d[ S:1])= S:1);
+  { other okay bool
+    
+     B:( B:other= S:0);
+  }
+}

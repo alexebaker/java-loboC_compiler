@@ -1,0 +1,40 @@
+bool e,f,UNUSED; signed a,b; unsigned c,d; 
+a = 1;
+b = a;
+c = 2;
+c = d;
+e = 1;
+f = 0;
+e = f;
+// unsigned wins
+a+c;
+c+b;
+// target wins
+a=c;
+c=b;
+// no bool arith
+//../tests/t10.s4i:16:1: Unacceptable typeEnum 'bool' for addition or subtraction 'e'
+//e+1;
+
+// comparisons make bools
+a==1;
+e!=f;
+c>=d;
+(a==b) != (c==d);
+
+// no ordered comparisons across signedness
+//../tests/t10.s4i:26:3: signedness must match for operation '<'
+//a < c;
+
+a < (b=c); // but 'assignment casting' urgh..
+
+// Nested symbol tables!
+{
+  signed e, other; bool[3] d;  // 'other' unused at this level
+  e = a+b;
+  d[1] = 1;
+  {
+    bool other;                
+    other = 0;                 // even though used here..
+  }
+}

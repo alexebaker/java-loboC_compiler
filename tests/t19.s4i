@@ -1,0 +1,16 @@
+bool b;
+signed a;
+unsigned[5][] c;
+signed[] p;
+signed[][] pp;
+
+b = 1==1 || 1==2;
+a = 1 ? 2 : 3;
+
+a = c[2+2][];
+
+p = &a;
+pp = &p;
+p = pp[];
+pp = &(&a);
+a = pp[][];

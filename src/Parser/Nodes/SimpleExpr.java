@@ -1,6 +1,6 @@
 package Parser.Nodes;
 
-import Errors.SyntaxError;
+import Errors.Error;
 import Parser.Operators.Operator;
 import Parser.Operators.TermOp;
 import Tokenizer.TokenReader;
@@ -8,7 +8,7 @@ import Compiler.*;
 import Types.Type;
 
 public class SimpleExpr extends ASTNode {
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         ASTNode node = Term.parse(cs, st);
         while (TermOp.isOp(tr.peek())) {

@@ -1,5 +1,6 @@
 package Parser.Nodes;
 
+import Errors.Error;
 import Errors.SyntaxError;
 import Tokenizer.Tokens.IdentifierToken;
 import Tokenizer.Tokens.NumberToken;
@@ -9,7 +10,7 @@ import Tokenizer.Tokens.Token;
 import Types.Type;
 
 public class PrimaryExpr extends ASTNode {
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         if (IdentifierToken.isToken(tr.peek())) {
             return Identifier.parse(cs, st);

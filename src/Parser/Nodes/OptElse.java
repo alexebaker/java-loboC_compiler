@@ -1,7 +1,7 @@
 package Parser.Nodes;
 
 import Compiler.*;
-import Errors.SyntaxError;
+import Errors.Error;
 import Tokenizer.TokenReader;
 import Types.Type;
 
@@ -32,7 +32,7 @@ public class OptElse extends ASTNode {
         return str.toString();
     }
 
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         OptElse optElse = new OptElse();
         if (tr.peek().getValue().equals("else")) {

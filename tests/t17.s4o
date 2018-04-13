@@ -1,0 +1,10 @@
+a okay signed
+b unused signed
+c okay signed
+
+{ b okay bool
+  c unused bool
+
+  S:( S:a= B:b);
+}
+ S:( S:a= S:c);

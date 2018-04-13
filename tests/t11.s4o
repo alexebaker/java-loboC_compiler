@@ -1,0 +1,31 @@
+a okay signed
+b okay signed
+c okay signed
+d okay signed[3]
+e okay signed
+p okay signed[]
+
+ S:( S:( S[3]:d[ S:2])= S:( S:a+ S:3));
+ S[]:( S[]:p= S[]:(& S:e));
+ S:( S:( S[]:p[])= S:0);
+ S:(++ S:( S[]:p[]));
+ S:( S:( S[]:p[])--);
+if ( B:( S:( S:( S[3]:d[ S:2])= S:( S:a+ S:3))> S:8))
+  { c okay unsigned
+    d okay unsigned[9]
+    dp okay unsigned[9][]
+    e okay unsigned
+    
+     U:( U:c= S:( S:a= S:( S:b--)));
+     U:( U:( U[9]:d[ S:3])= U:( U:e+ U:c));
+     U[9][]:( U[9][]:dp= U[9][]:(& U[9]:d));
+     U:( U:( U[9]:( U[9][]:dp[])[ S:7])--);
+  }
+ S:( S:b= S:( S[3]:d[ S:2]));
+ S:(++ S:a);
+if ( B:( S:a> S:b))
+  if ( B:( S:c> S:( S[3]:d[ S:0])))
+     S:( S:( S[3]:d[ S:1])= S:a);
+  else 
+     S:( S:b= S:c);
+   S:(-- S:a);

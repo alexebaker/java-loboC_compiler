@@ -12,6 +12,7 @@ public class SymbolTable {
     private HashMap<Token, VDI> symbolTable;
     private boolean inDef;
     private SymbolTable parent;
+    private Token lastAdded;
 
     public SymbolTable() {
         this(null);
@@ -21,6 +22,7 @@ public class SymbolTable {
         symbolTable = new HashMap<>();
         inDef = false;
         this.parent = parent;
+        this.lastAdded = parent == null ? null : parent.getLastAdded();
     }
 
     public VDI getVDI(Token name) {
@@ -33,6 +35,10 @@ public class SymbolTable {
         return symbolTable.get(name);
     }
 
+    public Token getLastAdded() {
+        return lastAdded == null ? (parent == null ? null : parent.getLastAdded()) : lastAdded;
+    }
+
     public boolean isInDef() {
         return inDef;
     }
@@ -43,7 +49,8 @@ public class SymbolTable {
 
     public boolean addDeclaration(Token name, Type type) {
         if (!symbolTable.containsKey(name)) {
-            symbolTable.put(name, new VDI(name, "unused", type));
+            symbolTable.put(name, new VDI(name, "unused", type, getVDI(getLastAdded())));
+            lastAdded = name;
             return true;
         }
         return false;

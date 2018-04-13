@@ -1,25 +1,35 @@
 package Types;
 
 public class ArrayType extends Type {
-    private int size;
+    private int arraySize;
 
     public ArrayType() {
         this(0);
     }
 
-    public ArrayType(int size) {
+    public ArrayType(int arraySize) {
         super(TypeEnum.ARRAY);
-        this.size = size;
+        this.arraySize = arraySize;
     }
 
+    public int getArraySize() {
+        return arraySize;
+    }
+
+    @Override
     public int getSize() {
-        return size;
+        return arraySize * getOfType().getSize();
+    }
+
+    @Override
+    public int getAlignment() {
+        return getOfType().getAlignment();
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof ArrayType) {
-            return super.equals(obj) && getSize() == ((ArrayType) obj).getSize();
+            return super.equals(obj) && getArraySize() == ((ArrayType) obj).getArraySize();
         }
         return false;
     }
@@ -29,7 +39,7 @@ public class ArrayType extends Type {
         StringBuilder str = new StringBuilder();
         str.append(super.toString());
         str.append("[");
-        str.append(size);
+        str.append(arraySize);
         str.append("]");
         return str.toString();
     }

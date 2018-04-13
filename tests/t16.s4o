@@ -1,0 +1,5 @@
+a okay signed
+b okay unsigned
+c okay bool
+
+U:( U:b= S:( S:a= B:( B:c= S:1)));

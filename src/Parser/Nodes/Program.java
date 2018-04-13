@@ -1,5 +1,6 @@
 package Parser.Nodes;
 
+import Errors.Error;
 import Errors.SyntaxError;
 import Tokenizer.TokenReader;
 import Compiler.*;

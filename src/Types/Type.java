@@ -32,6 +32,14 @@ public class Type {
         return null;
     }
 
+    public int getSize() {
+        return 0;
+    }
+
+    public int getAlignment() {
+        return 1;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Type) {

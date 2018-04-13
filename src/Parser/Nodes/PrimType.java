@@ -1,5 +1,6 @@
 package Parser.Nodes;
 
+import Errors.Error;
 import Errors.SyntaxError;
 import Tokenizer.TokenReader;
 import Tokenizer.Tokens.Token;
@@ -19,7 +20,7 @@ public class PrimType extends ASTNode {
         return token.getValue();
     }
 
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         if (PrimType.isType(tr.peek())) {
             return new PrimType(tr.read());

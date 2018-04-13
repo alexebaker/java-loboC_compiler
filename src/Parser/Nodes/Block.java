@@ -1,6 +1,7 @@
 package Parser.Nodes;
 
 import Compiler.*;
+import Errors.Error;
 import Errors.SyntaxError;
 import Tokenizer.TokenReader;
 import Tokenizer.Tokens.EOFToken;
@@ -83,7 +84,7 @@ public class Block extends ASTNode {
             try {
                 block.addDef(Def.parse(cs, block.getSymbolTable()));
             }
-            catch (SyntaxError ex) {
+            catch (Error ex) {
                 cs.addError(ex);
                 Token recoveredToken = tr.recoverFromError();
                 if (!recoveredToken.getValue().equals(";")) {
@@ -98,7 +99,7 @@ public class Block extends ASTNode {
             try {
                 block.addStmt(Statement.parse(cs, block.getSymbolTable()));
             }
-            catch (SyntaxError ex) {
+            catch (Error ex) {
                 cs.addError(ex);
                 if (EOFToken.isToken(ex.getToken())) {
                     return block;

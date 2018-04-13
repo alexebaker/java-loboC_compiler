@@ -1,0 +1,12 @@
+a okay signed
+b okay bool
+
+ S:( S:a= S:-3);
+ B:( B:b= B:0);
+ S:(++ S:a);
+ S:( S:a++);
+while ( B:b)
+  { 
+    
+     B:( B:b= S:0);
+  }

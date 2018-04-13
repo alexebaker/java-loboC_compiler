@@ -1,6 +1,7 @@
 package Parser.Nodes;
 
 import Compiler.*;
+import Errors.Error;
 import Errors.SyntaxError;
 import Tokenizer.TokenReader;
 import Types.Type;
@@ -43,7 +44,7 @@ public class WhileStmt extends ASTNode {
         return str.toString();
     }
 
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         WhileStmt whileStmt = new WhileStmt();
         if (tr.peek().getValue().equals("while")) {

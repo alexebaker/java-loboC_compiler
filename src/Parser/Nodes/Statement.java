@@ -1,6 +1,7 @@
 package Parser.Nodes;
 
 import Compiler.*;
+import Errors.Error;
 import Errors.SyntaxError;
 import Parser.Operators.PreunOp;
 import Tokenizer.TokenReader;
@@ -85,7 +86,7 @@ public class Statement extends ASTNode {
         return str.toString();
     }
 
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         Statement stmt = new Statement();
         if (tr.peek().getValue().equals("{")) {
@@ -120,7 +121,7 @@ public class Statement extends ASTNode {
                     throw new SyntaxError(nextToken, ";");
                 }
             }
-            catch (SyntaxError ex) {
+            catch (Error ex) {
                 cs.addError(ex);
                 Token recoveredToken = tr.recoverFromError();
                 if (!recoveredToken.getValue().equals(";")) {

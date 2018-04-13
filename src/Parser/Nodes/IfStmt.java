@@ -1,6 +1,7 @@
 package Parser.Nodes;
 
 import Compiler.*;
+import Errors.Error;
 import Errors.SyntaxError;
 import Tokenizer.TokenReader;
 import Types.Type;
@@ -56,7 +57,7 @@ public class IfStmt extends ASTNode {
         return str.toString();
     }
 
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         IfStmt ifStmt = new IfStmt();
         if (tr.peek().getValue().equals("if")) {

@@ -1,6 +1,6 @@
 package Parser.Nodes;
 
-import Errors.SyntaxError;
+import Errors.Error;
 import Tokenizer.TokenReader;
 import Compiler.*;
 import Types.Type;
@@ -44,7 +44,7 @@ public class TypeSpec extends ASTNode {
         return str.toString();
     }
 
-    public static ASTNode parse(CompilerState cs, SymbolTable st) throws SyntaxError {
+    public static ASTNode parse(CompilerState cs, SymbolTable st) throws Error {
         TokenReader tr = cs.getTr();
         TypeSpec typeSpec = new TypeSpec();
         typeSpec.setTypeName(PrimType.parse(cs, st));

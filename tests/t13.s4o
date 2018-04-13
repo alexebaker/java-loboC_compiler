@@ -1,0 +1,7 @@
+a okay signed
+b okay bool
+i okay unsigned
+
+ U:( U:i= S:4);
+ S:( S:a= S:-111110000);
+ B:( B:b= B:1);
