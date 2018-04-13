@@ -18,7 +18,7 @@ public class Number extends ASTNode {
     }
 
     public String getASTR(int indentDepth, CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         str.append(getTypePrefix(cs));
         str.append(token.getValue());
         return str.toString();

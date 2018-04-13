@@ -19,7 +19,7 @@ public class TypeError extends Error {
 
     @Override
     public String getErrorMsg() {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         str.append("Type Error! ");
         if (loc != null) {
             str.append("Line: ");

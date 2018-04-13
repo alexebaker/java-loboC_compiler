@@ -56,7 +56,7 @@ public class Type {
 
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         if (ofType != null) {
             str.append(ofType);
         }

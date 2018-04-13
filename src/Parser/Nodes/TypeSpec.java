@@ -34,7 +34,7 @@ public class TypeSpec extends ASTNode {
 
     @Override
     public String getASTR(int indentDepth, CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         if (typeName != null) {
             str.append(typeName.getASTR(indentDepth, cs));
             for (ASTNode arraySpec : arraySpecs) {

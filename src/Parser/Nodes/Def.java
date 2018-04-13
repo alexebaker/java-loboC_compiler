@@ -42,7 +42,7 @@ public class Def extends ASTNode {
 
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         str.append(typeSpec);
         str.append(" ");
         str.append(varNames.get(0));

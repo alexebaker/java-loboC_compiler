@@ -21,7 +21,7 @@ public abstract class ASTNode {
     }
 
     public String getASTR(int indentDepth, CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         for (int idx = 0; idx < indentDepth; idx++) {
             str.append("  ");
         }
@@ -33,14 +33,14 @@ public abstract class ASTNode {
     }
 
     public String getBOTLPIF(CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         str.append(getVSR(0, cs));
         str.append(getASTR(0, cs));
         return str.toString();
     }
 
     public String getTypePrefix(CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         if (getNodeType(cs) != null) {
             String type = getNodeType(cs).toString();
             type = type.replaceAll("unsigned", "U");

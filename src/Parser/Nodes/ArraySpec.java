@@ -52,7 +52,7 @@ public class ArraySpec extends ASTNode {
 
     @Override
     public String getASTR(int indentDepth, CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         str.append("[");
         if (expr != null) {
             str.append(expr.getASTR(indentDepth, cs));

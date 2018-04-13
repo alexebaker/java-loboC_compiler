@@ -17,7 +17,7 @@ public class PointerType extends Type {
 
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         str.append(super.toString());
         str.append("[]");
         return str.toString();

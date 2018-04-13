@@ -36,7 +36,7 @@ public class Token implements Comparable<Token> {
     }
 
     public String getInfoStr() {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         str.append(loc.getPath());
         str.append(":");
         str.append(loc.getLineCount());

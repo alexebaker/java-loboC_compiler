@@ -31,7 +31,7 @@ public class AsgnExpr extends ASTNode {
 
     @Override
     public String getASTR(int indentDepth, CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         if (condExpr != null) {
             if (asgnExpr != null) {
                 str.append(getTypePrefix(cs));

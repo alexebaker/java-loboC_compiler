@@ -53,7 +53,7 @@ public class VDI {
 
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         str.append(name);
         str.append(" ");
         str.append(status);

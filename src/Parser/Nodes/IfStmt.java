@@ -44,7 +44,7 @@ public class IfStmt extends ASTNode {
 
     @Override
     public String getASTR(int indentDepth, CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         if (expr != null && stmt != null) {
             str.append("if (");
             str.append(expr.getASTR(0, cs));

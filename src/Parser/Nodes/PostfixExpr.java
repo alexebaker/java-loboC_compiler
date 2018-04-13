@@ -35,7 +35,7 @@ public class PostfixExpr extends ASTNode {
 
     @Override
     public String getASTR(int indentDepth, CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         if (primaryExpr != null) {
             str.append(getTypePrefix(cs));
             str.append("(");

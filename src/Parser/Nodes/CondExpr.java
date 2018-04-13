@@ -2,6 +2,7 @@ package Parser.Nodes;
 
 import Errors.Error;
 import Errors.SyntaxError;
+import Errors.TypeError;
 import Tokenizer.TokenReader;
 import Compiler.*;
 import Types.Type;
@@ -32,7 +33,7 @@ public class CondExpr extends ASTNode {
 
     @Override
     public String getASTR(int indentDepth, CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         if (logOrExpr != null) {
             if (expr != null && condExpr != null) {
                 str.append(getTypePrefix(cs));
@@ -78,11 +79,15 @@ public class CondExpr extends ASTNode {
                         setType(expr.getNodeType(cs));
                     }
                     else {
-                        //excpetion
+                        String msg = "Second and Third arguments to the '?' operator must be the same type. Instead got '" + expr.getNodeType(cs) + "' and '" + condExpr.getNodeType(cs) + "'";
+                        cs.addError(new TypeError(msg, logOrExpr.getLocation()));
+                        setType(new Type(TypeEnum.UNDEF));
                     }
                 }
                 else {
-                    //exception
+                    String msg = "The '?' operator must start with a 'Bool', instead found '" + logOrExpr.getNodeType(cs) + "'";
+                    cs.addError(new TypeError(msg, logOrExpr.getLocation()));
+                    setType(new Type(TypeEnum.UNDEF));
                 }
             }
             else {

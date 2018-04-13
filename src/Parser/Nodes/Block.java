@@ -48,7 +48,7 @@ public class Block extends ASTNode {
 
     @Override
     public String getVSR(int indentDepth, CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         str.append(symbolTable.getVSR(indentDepth));
         str.append("\n");
         return str.toString();
@@ -56,7 +56,7 @@ public class Block extends ASTNode {
 
     @Override
     public String getASTR(int indentDepth, CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         for (ASTNode stmt : stmts) {
             if (stmt != null) str.append(stmt.getASTR(indentDepth, cs));
         }
@@ -65,7 +65,7 @@ public class Block extends ASTNode {
 
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         for (ASTNode def : defs) {
             if (def != null) str.append(def);
         }

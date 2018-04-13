@@ -11,7 +11,7 @@ public class SyntaxError extends Error {
     }
 
     public String getErrorMsg() {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         str.append("Syntax Error! ");
         str.append("Line: ");
         str.append(getToken().getLoc().getLineCount());

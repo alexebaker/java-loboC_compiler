@@ -90,8 +90,8 @@ public class SymbolTable {
     }
 
     public String getVSR(int indentDepth) {
-        StringBuilder str = new StringBuilder("");
-        StringBuilder indentStr = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
+        StringBuilder indentStr = new StringBuilder();
         for (int idx = 0; idx < indentDepth; idx++) {
             indentStr.append("  ");
         }

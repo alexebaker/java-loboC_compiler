@@ -56,7 +56,7 @@ public class Statement extends ASTNode {
 
     @Override
     public String getASTR(int indentDepth, CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         String indentStr = super.getASTR(indentDepth, cs);
         if (expr != null) {
             str.append(indentStr);

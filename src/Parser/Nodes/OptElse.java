@@ -23,7 +23,7 @@ public class OptElse extends ASTNode {
 
     @Override
     public String getASTR(int indentDepth, CompilerState cs) {
-        StringBuilder str = new StringBuilder("");
+        StringBuilder str = new StringBuilder();
         if (stmt != null) {
             str.append(super.getASTR(indentDepth, cs));
             str.append("else\n");
