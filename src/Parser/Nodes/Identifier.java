@@ -75,4 +75,8 @@ public class Identifier extends ASTNode {
     public boolean isAssignable() {
         return true;
     }
+
+    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+        return "";
+    }
 }

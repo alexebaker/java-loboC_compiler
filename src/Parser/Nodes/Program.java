@@ -1,6 +1,5 @@
 package Parser.Nodes;
 
-import Errors.Error;
 import Errors.SyntaxError;
 import Tokenizer.TokenReader;
 import Compiler.*;
@@ -94,5 +93,20 @@ public class Program extends ASTNode {
 
     public boolean isAssignable() {
         return false;
+    }
+
+    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+        StringBuilder asm = new StringBuilder();
+        asm.append("\t.text\n");
+        asm.append("\t.align 4\n");
+        asm.append("\t.globl main\n");
+        asm.append("main:\n");
+
+        //tmp
+        asm.append("\tlw $t0,0($gp)\n");
+        asm.append("\tlw $t1,4($gp)\n");
+        asm.append("\taddu $v0,$t0,$t1\n");
+        asm.append("\tjr $ra\n");
+        return asm.toString();
     }
 }

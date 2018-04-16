@@ -1,7 +1,8 @@
 package Compiler;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Vector;
 import Errors.Error;
 import Parser.Nodes.ASTNode;
@@ -12,6 +13,7 @@ import Tokenizer.TokenReader;
  */
 public class CompilerState {
     private String inputPath;
+    private String outputPath;
     private CompilerIO io;
     private TokenReader tr;
     private Vector<Error> errors;
@@ -20,28 +22,40 @@ public class CompilerState {
 
     public CompilerState() {
         this.inputPath = "<stdin>";
+        this.outputPath = "<stdout>";
         this.io = new CompilerIO();
         this.tr = new TokenReader(this);
         this.errors = new Vector<>();
         this.ast = null;
     }
 
-    public CompilerState(String fileName) {
-        this.inputPath = fileName;
+    public CompilerState(String inFile) {
+        this();
+        this.inputPath = inFile;
 
         try {
-            this.io = new CompilerIO(new FileReader(fileName), System.out);
+            this.io = new CompilerIO(new FileReader(inFile), System.out);
         }
-        catch (FileNotFoundException ex) {
-            System.err.println("Could not find file: " + fileName);
+        catch (IOException ex) {
             ex.printStackTrace();
             this.io.close();
-            System.exit(1);
+            System.exit(100);
         }
+    }
 
-        this.tr = new TokenReader(this);
-        this.errors = new Vector<>();
-        this.ast = null;
+    public CompilerState(String inFile, String outFile) {
+        this();
+        this.inputPath = inFile;
+        this.outputPath = outFile;
+
+        try {
+            this.io = new CompilerIO(new FileReader(inFile), new FileWriter(outFile));
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
+            this.io.close();
+            System.exit(100);
+        }
     }
 
     public Vector<Error> getErrors() {
@@ -88,5 +102,9 @@ public class CompilerState {
      */
     public String getInputPath() {
         return this.inputPath;
+    }
+
+    public void writeAsm() {
+        io.write(ast.getAsm(null, null, FallThrough.FALL_NEITHER));
     }
 }

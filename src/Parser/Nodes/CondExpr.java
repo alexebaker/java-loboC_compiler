@@ -101,7 +101,7 @@ public class CondExpr extends ASTNode {
         logOrExpr = logOrExpr.foldConstants();
         if (expr != null && condExpr != null) {
             expr = expr.foldConstants();
-            condExpr.foldConstants();
+            condExpr = condExpr.foldConstants();
 
             Object logOrValue = logOrExpr.getValue();
             if (logOrValue != null) {
@@ -156,10 +156,7 @@ public class CondExpr extends ASTNode {
     }
 
     public Location getLocation() {
-        if (logOrExpr != null) {
-            return logOrExpr.getLocation();
-        }
-        return  null;
+        return  logOrExpr != null ? logOrExpr.getLocation() : null;
     }
 
     public boolean isAssignable() {
@@ -170,5 +167,9 @@ public class CondExpr extends ASTNode {
             return logOrExpr.isAssignable();
         }
         return false;
+    }
+
+    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+        return "";
     }
 }

@@ -1,7 +1,6 @@
 package Parser.Nodes;
 
-import Compiler.CompilerState;
-import Compiler.Location;
+import Compiler.*;
 import Types.Type;
 
 
@@ -58,6 +57,7 @@ public abstract class ASTNode {
     public abstract Object getValue();
     public abstract Location getLocation();
     public abstract boolean isAssignable();
+    public abstract String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft);
 
     @Override
     public String toString() {

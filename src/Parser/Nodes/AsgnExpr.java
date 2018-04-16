@@ -128,4 +128,8 @@ public class AsgnExpr extends ASTNode {
         asgnExpr = asgnExpr != null ? asgnExpr.foldConstants() : null;
         return condExpr != null && asgnExpr != null && condExpr.isAssignable();
     }
+
+    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+        return "";
+    }
 }

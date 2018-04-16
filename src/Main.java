@@ -6,29 +6,38 @@ import Compiler.CompilerState;
  */
 public class Main {
     public static void main(String[] argv) {
-        if (argv.length > 1) {
+        if (argv.length > 2) {
             System.err.println("Too many arguments, can only give 0 or 1 argument.");
             System.exit(1);
         }
 
         System.setProperty("line.separator", "\n");
-        CompilerState cs = new CompilerState();
+        CompilerState cs;
 
         if (argv.length == 1) {
             cs = new CompilerState(argv[0]);
+        }
+        else if (argv.length == 2) {
+            cs = new CompilerState(argv[0], argv[1]);
+        }
+        else {
+            cs = new CompilerState();
         }
 
         LCC lcc = new LCC(cs);
         lcc.compile();
 
-        cs.printBOTLPIF();
-        cs.printErrors();
+        //cs.printBOTLPIF();
 
-        cs.getIO().close();
-
-        if (cs.getErrors().size() > 9) {
+        if (cs.getErrors().size() == 0) {
+            cs.writeAsm();
+        }
+        else if (cs.getErrors().size() > 9) {
             System.exit(10);
         }
+
+        cs.printErrors();
+        cs.getIO().close();
         System.exit(cs.getErrors().size());
     }
 }

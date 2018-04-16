@@ -148,4 +148,8 @@ public class Block extends ASTNode {
     public boolean isAssignable() {
         return false;
     }
+
+    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+        return "";
+    }
 }
