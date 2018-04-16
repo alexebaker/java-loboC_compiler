@@ -1,11 +1,10 @@
 all: jar
 
 SPIKE:=5
-TEST_SUFFIX:=s4
 
 jar: compile
 	@cp README.md README.txt
-	@jar cvfe spike$(SPIKE).jar Main LICENSE Makefile README.md README.txt sources.txt spike$(SPIKE).txt src/ tests/ -C out .
+	@jar cvfe spike$(SPIKE).jar Main LICENSE Makefile README.txt sources.txt spike$(SPIKE)a.txt spikeb-10.txt src/ tests/ -C out .
 	@rm README.txt
 
 compile: clean
@@ -17,16 +16,7 @@ clean: FORCE
 	@rm -rf out/* spike$(SPIKE).jar
 	@ find . -name "*.class" -delete
 
-TEST_FILES:=$(wildcard tests/*.$(TEST_SUFFIX)i)
-TEST_RESULTS:=$(patsubst tests/%.$(TEST_SUFFIX)i, tests/%.$(TEST_SUFFIX)o, $(TEST_FILES))
-
-test: jar $(TEST_RESULTS)
-
-tests/%.$(TEST_SUFFIX)o: tests/%.$(TEST_SUFFIX)i FORCE
-	@echo -n "[Test $< -> $@ file: "
-	@java -jar spike$(SPIKE).jar $< | diff -EZBw $@ -
-	@echo -n "OK, stdin: "
-	@cat $< | java -jar spike$(SPIKE).jar | diff -EZBw $@ -
-	@echo "OK]"
+test: jar
+	@cd tlc && LOBOC="'java -jar ../spike5.jar'" make test && cd ..
 
 .PHONY: FORCE

@@ -137,6 +137,16 @@ public class PostfixExpr extends ASTNode {
     }
 
     public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
-        return "";
+        StringBuilder asm = new StringBuilder();
+        if (primaryExpr != null) {
+            asm.append(primaryExpr.getAsm(ifTrue, ifFalse, ft));
+            if (postfixExpr != null) {
+                asm.append(postfixExpr.getAsm(ifTrue, ifFalse, ft));
+            }
+            else if (arraySpec != null) {
+                asm.append(arraySpec.getAsm(ifTrue, ifFalse, ft));
+            }
+        }
+        return asm.toString();
     }
 }

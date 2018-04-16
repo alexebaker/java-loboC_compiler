@@ -8,7 +8,7 @@ import Tokenizer.Tokens.Token;
 import Types.PrimType;
 import Types.Type;
 import Types.TypeEnum;
-import Compiler.CompilerState;
+import Compiler.*;
 
 public class TermOp extends Operator {
     public TermOp(Token token) {
@@ -85,6 +85,20 @@ public class TermOp extends Operator {
             }
         }
         return null;
+    }
+
+    @Override
+    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+        StringBuilder asm = new StringBuilder();
+        asm.append(getLhs().getAsm(ifTrue, ifFalse, ft));
+        asm.append(getRhs().getAsm(ifTrue, ifFalse, ft));
+        if (getOp().getValue().equals("+")) {
+            asm.append("\t\n");
+        }
+        else if (getOp().getValue().equals("-")) {
+            asm.append("\t\n");
+        }
+        return asm.toString();
     }
 
     public static boolean isOp(Token token) {

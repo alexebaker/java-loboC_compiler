@@ -130,6 +130,13 @@ public class AsgnExpr extends ASTNode {
     }
 
     public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
-        return "";
+        StringBuilder asm = new StringBuilder();
+        if (condExpr != null) {
+            asm.append(condExpr.getAsm(ifTrue, ifFalse, ft));
+            if (asgnExpr != null) {
+                asm.append(asgnExpr.getAsm(ifTrue, ifFalse, ft));
+            }
+        }
+        return asm.toString();
     }
 }

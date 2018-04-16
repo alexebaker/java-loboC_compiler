@@ -101,12 +101,15 @@ public class Program extends ASTNode {
         asm.append("\t.align 4\n");
         asm.append("\t.globl main\n");
         asm.append("main:\n");
+        if (block != null) asm.append(block.getAsm(ifTrue, ifFalse, ft));
+        asm.append("\tlw $v0,0($gp)\n");
+        asm.append("\tjr $ra\n");
 
         //tmp
-        asm.append("\tlw $t0,0($gp)\n");
-        asm.append("\tlw $t1,4($gp)\n");
-        asm.append("\taddu $v0,$t0,$t1\n");
-        asm.append("\tjr $ra\n");
+        //asm.append("\tlw $t0,0($gp)\n");
+        //asm.append("\tlw $t1,4($gp)\n");
+        //asm.append("\taddu $v0,$t0,$t1\n");
+        //asm.append("\tjr $ra\n");
         return asm.toString();
     }
 }

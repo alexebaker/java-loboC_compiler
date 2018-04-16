@@ -211,6 +211,19 @@ public class Statement extends ASTNode {
     }
 
     public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
-        return "";
+        StringBuilder asm = new StringBuilder();
+        if (expr != null) {
+            asm.append(expr.getAsm(ifTrue, ifFalse, ft));
+        }
+        else if (ifStmt != null) {
+            asm.append(ifStmt.getAsm(ifTrue, ifFalse, ft));
+        }
+        else if (whileStmt != null) {
+            asm.append(whileStmt.getAsm(ifTrue, ifFalse, ft));
+        }
+        else if (block != null) {
+            asm.append(block.getAsm(ifTrue, ifFalse, ft));
+        }
+        return asm.toString();
     }
 }

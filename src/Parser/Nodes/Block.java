@@ -150,6 +150,14 @@ public class Block extends ASTNode {
     }
 
     public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
-        return "";
+        StringBuilder asm = new StringBuilder();
+        for (ASTNode def: defs) {
+            asm.append(def.getAsm(ifTrue, ifFalse, ft));
+        }
+
+        for (ASTNode stmt: stmts) {
+            asm.append(stmt.getAsm(ifTrue, ifFalse, ft));
+        }
+        return asm.toString();
     }
 }
