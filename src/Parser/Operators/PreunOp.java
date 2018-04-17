@@ -49,7 +49,7 @@ public class PreunOp extends Operator {
 
     @Override
     public Object getValue() {
-        if (getOp().getValue().equals("-")) {
+        if (getRhv() != null && getOp().getValue().equals("-")) {
             try {
                 return 0 - (int) getRhv();
             }
@@ -60,7 +60,22 @@ public class PreunOp extends Operator {
 
     @Override
     String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
-        return "";
+        StringBuilder asm = new StringBuilder();
+        asm.append("\tlw $t0," + rhs.getAddr() + "\n");
+
+        if (getOp().getValue().equals("-")) {
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tnegu $t1,$t0\n");
+            }
+            else {
+                asm.append("\tneg $t1,$t0\n");
+            }
+        }
+
+        String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
+        asm.append("\tsw $t1," + newAddr + "\n");
+        ad.setAddr(newAddr);
+        return asm.toString();
     }
 
     public static boolean isOp(Token token) {

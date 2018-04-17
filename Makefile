@@ -17,6 +17,6 @@ clean: FORCE
 	@ find . -name "*.class" -delete
 
 test: jar
-	@cd tlc && LOBOC="'java -jar ../spike5.jar'" make test && cd ..
+	@cd tlc && ./tlc -c 'java -jar ../spike$(SPIKE).jar' -recursive -test && cd ..
 
 .PHONY: FORCE
