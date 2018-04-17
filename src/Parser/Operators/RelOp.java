@@ -109,7 +109,47 @@ public class RelOp extends Operator {
 
     @Override
     String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
-        return "";
+        StringBuilder asm = new StringBuilder();
+        asm.append("\tlw $t0," + lhs.getAddr() + "\n");
+        asm.append("\tlw $t1," + rhs.getAddr() + "\n");
+
+        if (getOp().getValue().equals("<")) {
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tsltu $t3,$t0,$t1\n");
+            }
+            else {
+                asm.append("\tslt $t3,$t0,$t1\n");
+            }
+        }
+        else if (getOp().getValue().equals("<=")) {
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tsleu $t3,$t0,$t1\n");
+            }
+            else {
+                asm.append("\tsle $t3,$t0,$t1\n");
+            }
+        }
+        else if (getOp().getValue().equals(">")) {
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tsgtu $t3,$t0,$t1\n");
+            }
+            else {
+                asm.append("\tsgt $t3,$t0,$t1\n");
+            }
+        }
+        else if (getOp().getValue().equals(">=")) {
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tsgeu $t3,$t0,$t1\n");
+            }
+            else {
+                asm.append("\tsge $t3,$t0,$t1\n");
+            }
+        }
+
+        String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
+        asm.append("\tsw $t3," + newAddr + "\n");
+        ad.setAddr(newAddr);
+        return asm.toString();
     }
 
     public static boolean isOp(Token token) {

@@ -71,7 +71,21 @@ public class EqOp extends Operator {
 
     @Override
     String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
-        return "";
+        StringBuilder asm = new StringBuilder();
+        asm.append("\tlw $t0," + lhs.getAddr() + "\n");
+        asm.append("\tlw $t1," + rhs.getAddr() + "\n");
+
+        if (getOp().getValue().equals("==")) {
+            asm.append("\tseq $t3,$t0,$t1\n");
+        }
+        else if (getOp().getValue().equals("!=")) {
+            asm.append("\tsne $t3,$t0,$t1\n");
+        }
+
+        String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
+        asm.append("\tsw $t3," + newAddr + "\n");
+        ad.setAddr(newAddr);
+        return asm.toString();
     }
 
     public static boolean isOp(Token token) {

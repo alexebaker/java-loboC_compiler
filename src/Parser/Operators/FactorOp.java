@@ -94,7 +94,7 @@ public class FactorOp extends Operator {
 
         if (getOp().getValue().equals("*")) {
             if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
-                asm.append("\tmulou $t3,$t0,$t1\n");
+                asm.append("\tmul $t3,$t0,$t1\n");
             }
             else {
                 asm.append("\tmulo $t3,$t0,$t1\n");
