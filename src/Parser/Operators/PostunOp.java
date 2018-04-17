@@ -41,7 +41,33 @@ public class PostunOp extends Operator {
 
     @Override
     String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
-        return "";
+        StringBuilder asm = new StringBuilder();
+        asm.append("\tlw $t0," + lhs.getAddr() + "\n");
+
+        if (getOp().getValue().equals("--")) {
+            asm.append("\tli $t1,0x01\n");
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tsubu $t2,$t0,$t1\n");
+            }
+            else {
+                asm.append("\tsub $t2,$t0,$t1\n");
+            }
+        }
+        else if (getOp().getValue().equals("++")) {
+            asm.append("\tli $t1,0x01\n");
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\taddiu $t2,$t0,0x01\n");
+            }
+            else {
+                asm.append("\taddi $t2,$t0,0x01\n");
+            }
+        }
+
+        String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
+        asm.append("\tsw $t0," + newAddr + "\n");
+        asm.append("\tsw $t2," + lhs.getAddr() + "\n");
+        ad.setAddr(newAddr);
+        return asm.toString();
     }
 
     public static boolean isOp(Token token) {

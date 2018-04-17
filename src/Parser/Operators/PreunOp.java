@@ -70,11 +70,33 @@ public class PreunOp extends Operator {
             else {
                 asm.append("\tneg $t1,$t0\n");
             }
+            String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
+            asm.append("\tsw $t1," + newAddr + "\n");
+            ad.setAddr(newAddr);
+            return asm.toString();
+        }
+        else if (getOp().getValue().equals("--")) {
+            asm.append("\tli $t1,0x01\n");
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tsubu $t3,$t0,$t1\n");
+            }
+            else {
+                asm.append("\tsub $t3,$t0,$t1\n");
+            }
+            asm.append("\tmove $t0,$t3\n");
+        }
+        else if (getOp().getValue().equals("++")) {
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\taddiu $t1,$t0,0x01\n");
+            }
+            else {
+                asm.append("\taddi $t1,$t0,0x01\n");
+            }
+            asm.append("\tmove $t0,$t1\n");
         }
 
-        String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
-        asm.append("\tsw $t1," + newAddr + "\n");
-        ad.setAddr(newAddr);
+        asm.append("\tsw $t0," + rhs.getAddr() + "\n");
+        ad.setAddr(rhs.getAddr());
         return asm.toString();
     }
 

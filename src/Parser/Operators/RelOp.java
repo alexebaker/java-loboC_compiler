@@ -26,7 +26,7 @@ public class RelOp extends Operator {
                 }
                 else {
                     setType(new Type(TypeEnum.UNDEF));
-                    String msg = "Operator to types must be identical, instead got '" + lhs + "' and '" + rhs + "'";
+                    String msg = "Operator types must be identical, instead got '" + lhs + "' and '" + rhs + "'";
                     cs.addError(new TypeError(msg, getLocation()));
                 }
             }
