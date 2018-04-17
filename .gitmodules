@@ -1,0 +1,3 @@
+[submodule "tlc/cs554loboctests"]
+	path = tlc/cs554loboctests
+	url = git@github.com:alexebaker/cs554loboctests.git
