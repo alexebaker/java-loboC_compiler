@@ -7,7 +7,7 @@ import Types.PointerType;
 import Types.PrimType;
 import Types.Type;
 import Types.TypeEnum;
-import Compiler.CompilerState;
+import Compiler.*;
 
 public class PreunOp extends Operator {
     public PreunOp(Token token) {
@@ -56,6 +56,11 @@ public class PreunOp extends Operator {
             catch (ClassCastException e) {}
         }
         return null;
+    }
+
+    @Override
+    String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
+        return "";
     }
 
     public static boolean isOp(Token token) {

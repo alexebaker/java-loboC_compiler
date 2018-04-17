@@ -1,6 +1,6 @@
 package Parser.Operators;
 
-import Compiler.CompilerState;
+import Compiler.*;
 import Errors.TypeError;
 import Parser.Nodes.ASTNode;
 import Tokenizer.Tokens.Token;
@@ -37,6 +37,11 @@ public class PostunOp extends Operator {
     @Override
     public Object getValue() {
         return null;
+    }
+
+    @Override
+    String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
+        return "";
     }
 
     public static boolean isOp(Token token) {

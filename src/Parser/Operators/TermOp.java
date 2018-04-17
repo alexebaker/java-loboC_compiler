@@ -88,16 +88,31 @@ public class TermOp extends Operator {
     }
 
     @Override
-    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+    String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
         StringBuilder asm = new StringBuilder();
-        asm.append(getLhs().getAsm(ifTrue, ifFalse, ft));
-        asm.append(getRhs().getAsm(ifTrue, ifFalse, ft));
+        asm.append("\tlw $t0," + lhs.getAddr() + "\n");
+        asm.append("\tlw $t1," + rhs.getAddr() + "\n");
+
         if (getOp().getValue().equals("+")) {
-            asm.append("\t\n");
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\taddu $t3,$t0,$t1\n");
+            }
+            else {
+                asm.append("\tadd $t3,$t0,$t1\n");
+            }
         }
         else if (getOp().getValue().equals("-")) {
-            asm.append("\t\n");
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tsubu $t3,$t0,$t1\n");
+            }
+            else {
+                asm.append("\tsub $t3,$t0,$t1\n");
+            }
         }
+
+        String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
+        asm.append("\tsw $t3," + newAddr + "\n");
+        ad.setAddr(newAddr);
         return asm.toString();
     }
 

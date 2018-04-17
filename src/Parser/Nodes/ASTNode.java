@@ -57,7 +57,7 @@ public abstract class ASTNode {
     public abstract Object getValue();
     public abstract Location getLocation();
     public abstract boolean isAssignable();
-    public abstract String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft);
+    public abstract String getAsm(AsmData ad);
 
     @Override
     public String toString() {

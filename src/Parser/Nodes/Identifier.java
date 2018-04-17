@@ -76,7 +76,8 @@ public class Identifier extends ASTNode {
         return true;
     }
 
-    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+    public String getAsm(AsmData ad) {
+        ad.setAddr(ad.getSt().getVDI(getToken()).getAddr());
         return "";
     }
 }

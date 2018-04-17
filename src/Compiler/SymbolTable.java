@@ -10,9 +10,12 @@ import java.util.TreeSet;
 
 public class SymbolTable {
     private HashMap<Token, VDI> symbolTable;
+    private HashMap<String, TmpVDI> tmpTable;
     private boolean inDef;
     private SymbolTable parent;
     private Token lastAdded;
+    private String lastTmp;
+    private int tmpCount;
 
     public SymbolTable() {
         this(null);
@@ -20,9 +23,12 @@ public class SymbolTable {
 
     public SymbolTable(SymbolTable parent) {
         symbolTable = new HashMap<>();
+        tmpTable = new HashMap<>();
         inDef = false;
         this.parent = parent;
         this.lastAdded = parent == null ? null : parent.getLastAdded();
+        this.lastTmp = "";
+        this.tmpCount = parent == null ? 0 : parent.getTmpCount();
     }
 
     public VDI getVDI(Token name) {
@@ -37,6 +43,10 @@ public class SymbolTable {
 
     public Token getLastAdded() {
         return lastAdded == null ? (parent == null ? null : parent.getLastAdded()) : lastAdded;
+    }
+
+    public String getLastTmp() {
+        return lastTmp.length() == 0 ? (parent == null ? "" : parent.getLastTmp()) : lastTmp;
     }
 
     public boolean isInDef() {
@@ -101,6 +111,29 @@ public class SymbolTable {
             str.append("\n");
         }
         return str.toString();
+    }
+
+    public TmpVDI getTmp(String id) {
+        if (!tmpTable.containsKey(id)) {
+            if (parent != null) {
+                return parent.getTmp(id);
+            }
+            return null;
+        }
+        return tmpTable.get(id);
+    }
+
+    public String addTmp(Type type) {
+        String tmpID = "tmp" + tmpCount;
+        TmpVDI newTmp = new TmpVDI(tmpID, type, getTmp(getLastTmp()));
+        tmpTable.put(tmpID, newTmp);
+        lastTmp = tmpID;
+        tmpCount += 1;
+        return tmpID;
+    }
+
+    public int getTmpCount() {
+        return tmpCount;
     }
 
     @Override

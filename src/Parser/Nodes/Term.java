@@ -40,7 +40,7 @@ public class Term extends ASTNode {
         return false;
     }
 
-    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+    public String getAsm(AsmData ad) {
         return "";
     }
 }

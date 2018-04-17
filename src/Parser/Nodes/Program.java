@@ -95,14 +95,14 @@ public class Program extends ASTNode {
         return false;
     }
 
-    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+    public String getAsm(AsmData ad) {
         StringBuilder asm = new StringBuilder();
         asm.append("\t.text\n");
         asm.append("\t.align 4\n");
         asm.append("\t.globl main\n");
         asm.append("main:\n");
-        if (block != null) asm.append(block.getAsm(ifTrue, ifFalse, ft));
-        asm.append("\tlw $v0,0($gp)\n");
+        if (block != null) asm.append(block.getAsm(ad));
+        asm.append("\tlw $v0," + ad.getAddr() + "\n");
         asm.append("\tjr $ra\n");
 
         //tmp

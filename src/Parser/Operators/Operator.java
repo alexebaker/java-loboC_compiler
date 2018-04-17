@@ -157,7 +157,21 @@ public class Operator extends ASTNode {
         return false;
     }
 
-    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
-        return "";
+    public String getAsm(AsmData ad) {
+        StringBuilder asm = new StringBuilder();
+        AsmData lhsAD = new AsmData(ad);
+        AsmData rhsAD = new AsmData(ad);
+        if (getLhs() != null) asm.append(getLhs().getAsm(lhsAD));
+        if (getRhs() != null) asm.append(getRhs().getAsm(rhsAD));
+        asm.append(applyAsmOp(ad, lhsAD, rhsAD));
+        return asm.toString();
+    }
+
+    String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
+        StringBuilder asm = new StringBuilder();
+        if (getOp().getValue().equals(",")) {
+            ad.setAddr(rhs.getAddr());
+        }
+        return asm.toString();
     }
 }

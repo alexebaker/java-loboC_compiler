@@ -111,7 +111,7 @@ public class ArraySpec extends ASTNode {
         return true;
     }
 
-    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+    public String getAsm(AsmData ad) {
         return "";
     }
 }

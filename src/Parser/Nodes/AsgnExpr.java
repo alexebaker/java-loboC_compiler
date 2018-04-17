@@ -129,13 +129,18 @@ public class AsgnExpr extends ASTNode {
         return condExpr != null && asgnExpr != null && condExpr.isAssignable();
     }
 
-    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+    public String getAsm(AsmData ad) {
         StringBuilder asm = new StringBuilder();
         if (condExpr != null) {
-            asm.append(condExpr.getAsm(ifTrue, ifFalse, ft));
+            AsmData condAD = new AsmData(ad);
+            asm.append(condExpr.getAsm(condAD));
             if (asgnExpr != null) {
-                asm.append(asgnExpr.getAsm(ifTrue, ifFalse, ft));
+                AsmData asgnExprAD = new AsmData(ad);
+                asm.append(asgnExpr.getAsm(asgnExprAD));
+                asm.append("\tlw $t0," + asgnExprAD.getAddr() + "\n");
+                asm.append("\tsw $t0," + condAD.getAddr() + "\n");
             }
+            ad.setAddr(condAD.getAddr());
         }
         return asm.toString();
     }

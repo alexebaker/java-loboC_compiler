@@ -8,7 +8,7 @@ import Tokenizer.Tokens.Token;
 import Types.PrimType;
 import Types.Type;
 import Types.TypeEnum;
-import Compiler.CompilerState;
+import Compiler.*;
 
 public class EqOp extends Operator {
     public EqOp(Token token) {
@@ -67,6 +67,11 @@ public class EqOp extends Operator {
             }
         }
         return null;
+    }
+
+    @Override
+    String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
+        return "";
     }
 
     public static boolean isOp(Token token) {

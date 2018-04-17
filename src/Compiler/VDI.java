@@ -11,6 +11,10 @@ public class VDI {
     private int offset;
     private VDI parent;
 
+    public VDI() {
+        this(null, "", null);
+    }
+
     public VDI(Token name, String status, Type type) {
         this(name, status, type, null);
     }
@@ -49,6 +53,14 @@ public class VDI {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public String getAddr() {
+        return offset + "($gp)";
     }
 
     @Override

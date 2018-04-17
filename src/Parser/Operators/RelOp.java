@@ -9,7 +9,7 @@ import Types.PointerType;
 import Types.PrimType;
 import Types.Type;
 import Types.TypeEnum;
-import Compiler.CompilerState;
+import Compiler.*;
 
 public class RelOp extends Operator {
     public RelOp(Token token) {
@@ -107,6 +107,11 @@ public class RelOp extends Operator {
         return null;
     }
 
+    @Override
+    String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
+        return "";
+    }
+
     public static boolean isOp(Token token) {
         return RelOp.isOp(token.getValue());
     }
@@ -122,4 +127,6 @@ public class RelOp extends Operator {
                 return false;
         }
     }
+
+
 }

@@ -210,19 +210,19 @@ public class Statement extends ASTNode {
         return false;
     }
 
-    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+    public String getAsm(AsmData ad) {
         StringBuilder asm = new StringBuilder();
         if (expr != null) {
-            asm.append(expr.getAsm(ifTrue, ifFalse, ft));
+            asm.append(expr.getAsm(ad));
         }
         else if (ifStmt != null) {
-            asm.append(ifStmt.getAsm(ifTrue, ifFalse, ft));
+            asm.append(ifStmt.getAsm(ad));
         }
         else if (whileStmt != null) {
-            asm.append(whileStmt.getAsm(ifTrue, ifFalse, ft));
+            asm.append(whileStmt.getAsm(ad));
         }
         else if (block != null) {
-            asm.append(block.getAsm(ifTrue, ifFalse, ft));
+            asm.append(block.getAsm(ad));
         }
         return asm.toString();
     }

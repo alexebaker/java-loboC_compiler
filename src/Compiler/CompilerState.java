@@ -67,6 +67,7 @@ public class CompilerState {
     }
 
     public void setAST(ASTNode ast) {
+        ast.getNodeType(this);
         this.ast = ast.foldConstants();
     }
 
@@ -105,6 +106,6 @@ public class CompilerState {
     }
 
     public void writeAsm() {
-        io.write(ast.getAsm(null, null, FallThrough.FALL_NEITHER));
+        io.write(ast.getAsm(new AsmData()));
     }
 }

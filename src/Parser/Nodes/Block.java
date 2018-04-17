@@ -149,15 +149,18 @@ public class Block extends ASTNode {
         return false;
     }
 
-    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+    public String getAsm(AsmData ad) {
         StringBuilder asm = new StringBuilder();
+        AsmData newAD = new AsmData(ad);
+        newAD.setSt(getSymbolTable());
         for (ASTNode def: defs) {
-            asm.append(def.getAsm(ifTrue, ifFalse, ft));
+            asm.append(def.getAsm(newAD));
         }
 
         for (ASTNode stmt: stmts) {
-            asm.append(stmt.getAsm(ifTrue, ifFalse, ft));
+            asm.append(stmt.getAsm(newAD));
         }
+        ad.setAddr(newAD.getAddr());
         return asm.toString();
     }
 }

@@ -57,7 +57,13 @@ public class Number extends ASTNode {
         return false;
     }
 
-    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
-        return "";
+    public String getAsm(AsmData ad) {
+        StringBuilder asm = new StringBuilder();
+        String hexVal = Integer.toHexString((int) getValue());
+        String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
+        asm.append("\taddi $t0,$0," + hexVal + "\n");
+        asm.append("\tsw $t0," + newAddr + "\n");
+        ad.setAddr(newAddr);
+        return asm.toString();
     }
 }

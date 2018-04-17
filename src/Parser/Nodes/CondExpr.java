@@ -169,13 +169,20 @@ public class CondExpr extends ASTNode {
         return false;
     }
 
-    public String getAsm(AsmLabel ifTrue, AsmLabel ifFalse, FallThrough ft) {
+    public String getAsm(AsmData ad) {
         StringBuilder asm = new StringBuilder();
         if (logOrExpr != null) {
-            asm.append(logOrExpr.getAsm(ifTrue, ifFalse, ft));
+            AsmData logOrAD = new AsmData(ad);
+            asm.append(logOrExpr.getAsm(logOrAD));
             if (expr != null && condExpr != null) {
-                asm.append(expr.getAsm(ifTrue, ifFalse, ft));
-                asm.append(condExpr.getAsm(ifTrue, ifFalse, ft));
+                AsmData exprAD = new AsmData(ad);
+                AsmData condAD = new AsmData(ad);
+                asm.append(expr.getAsm(exprAD));
+                asm.append(condExpr.getAsm(condAD));
+                // ternary asm here
+            }
+            else {
+                ad.setAddr(logOrAD.getAddr());
             }
         }
         return asm.toString();

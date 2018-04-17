@@ -1,6 +1,6 @@
 package Parser.Operators;
 
-import Compiler.CompilerState;
+import Compiler.*;
 import Errors.TypeError;
 import Parser.Nodes.ASTNode;
 import Parser.Nodes.Number;
@@ -78,15 +78,41 @@ public class FactorOp extends Operator {
                 try {
                     return (int) lhv / (int) rhv;
                 }
-                catch (ClassCastException e) {
-                    return null;
-                }
-                catch (ArithmeticException e) {
+                catch (ClassCastException|ArithmeticException e) {
                     return null;
                 }
             }
         }
         return null;
+    }
+
+    @Override
+    String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
+        StringBuilder asm = new StringBuilder();
+        asm.append("\tlw $t0," + lhs.getAddr() + "\n");
+        asm.append("\tlw $t1," + rhs.getAddr() + "\n");
+
+        if (getOp().getValue().equals("*")) {
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tmulou $t3,$t0,$t1\n");
+            }
+            else {
+                asm.append("\tmulo $t3,$t0,$t1\n");
+            }
+        }
+        else if (getOp().getValue().equals("/")) {
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tdivu $t3,$t0,$t1\n");
+            }
+            else {
+                asm.append("\tdiv $t3,$t0,$t1\n");
+            }
+        }
+
+        String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
+        asm.append("\tsw $t3," + newAddr + "\n");
+        ad.setAddr(newAddr);
+        return asm.toString();
     }
 
     public static boolean isOp(Token token) {
