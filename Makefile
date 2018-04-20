@@ -1,6 +1,6 @@
 all: jar
 
-SPIKE:=b
+SPIKE:=5b
 
 jar: compile
 	@cp README.md README.txt
