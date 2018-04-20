@@ -2,6 +2,7 @@ package Parser.Nodes;
 
 import Compiler.*;
 import Types.Type;
+import Types.TypeEnum;
 
 
 public abstract class ASTNode {
@@ -50,6 +51,20 @@ public abstract class ASTNode {
             str.append(":");
         }
         return str.toString();
+    }
+
+    public String getLoadInst() {
+        if (getType() != null && getType().getTypeEnum() == TypeEnum.BOOL) {
+            return "lbu";
+        }
+        return "lw";
+    }
+
+    public String getStoreInst() {
+        if (getType() != null && getType().getTypeEnum() == TypeEnum.BOOL) {
+            return "sb";
+        }
+        return "sw";
     }
 
     public abstract Type getNodeType(CompilerState cs);

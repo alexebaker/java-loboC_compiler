@@ -27,8 +27,6 @@ public class Main {
         LCC lcc = new LCC(cs);
         lcc.compile();
 
-        //cs.printBOTLPIF();
-
         if (cs.getErrors().size() == 0) {
             cs.writeAsm();
         }
@@ -36,6 +34,7 @@ public class Main {
             System.exit(10);
         }
 
+        //cs.printBOTLPIF();
         cs.printErrors();
         cs.getIO().close();
         System.exit(cs.getErrors().size());

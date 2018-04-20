@@ -145,6 +145,31 @@ public class IfStmt extends ASTNode {
     }
 
     public String getAsm(AsmData ad) {
-        return "";
+        StringBuilder asm = new StringBuilder();
+        if (expr != null && stmt != null) {
+            AsmData exprAD = new AsmData(ad);
+            AsmData stmtAD = new AsmData(ad);
+            String lbl1 = "label" + ad.getLabelCounter();
+            String lbl2 = "label" + ad.getLabelCounter();
+            String newAddr;
+            asm.append(expr.getAsm(exprAD));
+            asm.append("\t" + expr.getLoadInst() + " $t0," + exprAD.getAddr() + "\n");
+            asm.append("\tbeq $0,$t0," + lbl1 + "\n");
+            asm.append(stmt.getAsm(stmtAD));
+            asm.append("\t" + stmt.getLoadInst() + " $t1," + stmtAD.getAddr() + "\n");
+            newAddr = ad.getSt().getTmp(ad.getSt().addTmp(stmt.getType())).getAddr();
+            asm.append("\t" + stmt.getStoreInst() + " $t1," + newAddr + "\n");
+            asm.append("\tj " + lbl2 + "\n");
+            asm.append(lbl1 + ":\n");
+            if (optElse != null) {
+                AsmData elseAD = new AsmData(ad);
+                asm.append(optElse.getAsm(elseAD));
+                asm.append("\t" + optElse.getLoadInst() + " $t1," + elseAD.getAddr() + "\n");
+                asm.append("\t" + optElse.getStoreInst() + " $t1," + newAddr + "\n");
+            }
+            asm.append(lbl2 + ":\n");
+            ad.setAddr(newAddr);
+        }
+        return asm.toString();
     }
 }

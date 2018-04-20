@@ -134,7 +134,7 @@ public class Operator extends ASTNode {
                     }
                 }
             }
-            catch (ClassCastException e) {
+            catch (ClassCastException|NullPointerException e) {
                 return null;
             }
         }
@@ -159,11 +159,16 @@ public class Operator extends ASTNode {
 
     public String getAsm(AsmData ad) {
         StringBuilder asm = new StringBuilder();
-        AsmData lhsAD = new AsmData(ad);
-        AsmData rhsAD = new AsmData(ad);
-        if (getLhs() != null) asm.append(getLhs().getAsm(lhsAD));
-        if (getRhs() != null) asm.append(getRhs().getAsm(rhsAD));
-        asm.append(applyAsmOp(ad, lhsAD, rhsAD));
+        if (getOp().getValue().equals("&&") || getOp().getValue().equals("||")) {
+            asm.append(applyLogicalOp(ad));
+        }
+        else {
+            AsmData lhsAD = new AsmData(ad);
+            AsmData rhsAD = new AsmData(ad);
+            if (getLhs() != null) asm.append(getLhs().getAsm(lhsAD));
+            if (getRhs() != null) asm.append(getRhs().getAsm(rhsAD));
+            asm.append(applyAsmOp(ad, lhsAD, rhsAD));
+        }
         return asm.toString();
     }
 
@@ -172,6 +177,32 @@ public class Operator extends ASTNode {
         if (getOp().getValue().equals(",")) {
             ad.setAddr(rhs.getAddr());
         }
+        return asm.toString();
+    }
+
+    String applyLogicalOp(AsmData ad) {
+        StringBuilder asm = new StringBuilder();
+        String shortCutLbl = "label" + ad.getLabelCounter();
+        String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getType())).getAddr();
+        String op;
+        asm.append(getLhs().getAsm(ad));
+        asm.append("\t" + getLhs().getLoadInst() + " $t0," + ad.getAddr() + "\n");
+        asm.append("\t" + getStoreInst() + " $t0," + newAddr + "\n");
+        if (getOp().getValue().equals("&&")) {
+            asm.append("\tbeq $0,$t0," + shortCutLbl + "\n");
+            op = "and";
+        }
+        else {
+            asm.append("\tbne $0,$t0," + shortCutLbl + "\n");
+            op = "or";
+        }
+        asm.append(getRhs().getAsm(ad));
+        asm.append("\t" + getLoadInst() + " $t0," + newAddr + "\n");
+        asm.append("\t" + getRhs().getLoadInst() + " $t1," + ad.getAddr() + "\n");
+        asm.append("\t" + op + " $t2,$t0,$t1\n");
+        asm.append("\t" + getStoreInst() + " $t2," + newAddr + "\n");
+        asm.append(shortCutLbl + ":\n");
+        ad.setAddr(newAddr);
         return asm.toString();
     }
 }

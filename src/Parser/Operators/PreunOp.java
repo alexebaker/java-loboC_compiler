@@ -61,7 +61,7 @@ public class PreunOp extends Operator {
     @Override
     String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
         StringBuilder asm = new StringBuilder();
-        asm.append("\tlw $t0," + rhs.getAddr() + "\n");
+        asm.append("\t" + getRhs().getLoadInst() + " $t0," + rhs.getAddr() + "\n");
 
         if (getOp().getValue().equals("-")) {
             if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
@@ -94,8 +94,15 @@ public class PreunOp extends Operator {
             }
             asm.append("\tmove $t0,$t1\n");
         }
+        else if (getOp().getValue().equals("&")) {
+            asm.append("\tla $t0," + rhs.getAddr() + "\n");
+            String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
+            asm.append("\tsw $t0," + newAddr + "\n");
+            ad.setAddr(newAddr);
+            return asm.toString();
+        }
 
-        asm.append("\tsw $t0," + rhs.getAddr() + "\n");
+        asm.append("\t" + getRhs().getStoreInst() + " $t0," + rhs.getAddr() + "\n");
         ad.setAddr(rhs.getAddr());
         return asm.toString();
     }

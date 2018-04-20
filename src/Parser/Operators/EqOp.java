@@ -72,8 +72,8 @@ public class EqOp extends Operator {
     @Override
     String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
         StringBuilder asm = new StringBuilder();
-        asm.append("\tlw $t0," + lhs.getAddr() + "\n");
-        asm.append("\tlw $t1," + rhs.getAddr() + "\n");
+        asm.append("\t" + getLhs().getLoadInst() + " $t0," + lhs.getAddr() + "\n");
+        asm.append("\t" + getRhs().getLoadInst() + " $t1," + rhs.getAddr() + "\n");
 
         if (getOp().getValue().equals("==")) {
             asm.append("\tseq $t3,$t0,$t1\n");
@@ -83,7 +83,7 @@ public class EqOp extends Operator {
         }
 
         String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
-        asm.append("\tsw $t3," + newAddr + "\n");
+        asm.append("\t" + getStoreInst() + " $t3," + newAddr + "\n");
         ad.setAddr(newAddr);
         return asm.toString();
     }

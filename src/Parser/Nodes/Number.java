@@ -61,7 +61,7 @@ public class Number extends ASTNode {
         StringBuilder asm = new StringBuilder();
         String hexVal = Integer.toHexString((int) getValue());
         String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
-        asm.append("\tli $t0,0x" + hexVal + "\n");
+        asm.append("\tli $t0,0x0" + hexVal + "\n");
         asm.append("\tsw $t0," + newAddr + "\n");
         ad.setAddr(newAddr);
         return asm.toString();

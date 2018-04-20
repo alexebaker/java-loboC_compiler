@@ -112,10 +112,10 @@ public class Block extends ASTNode {
     public Type getNodeType(CompilerState cs) {
         if (getType() == null) {
             for (ASTNode def : defs) {
-                if (def != null) def.getNodeType(cs);
+                if (def != null) setType(def.getNodeType(cs));
             }
             for (ASTNode stmt : stmts) {
-                if (stmt != null) stmt.getNodeType(cs);
+                if (stmt != null) setType(stmt.getNodeType(cs));
             }
         }
         return getType();
@@ -162,5 +162,10 @@ public class Block extends ASTNode {
         }
         ad.setAddr(newAD.getAddr());
         return asm.toString();
+    }
+
+    @Override
+    public String getLoadInst() {
+        return stmts.get(stmts.size()-1).getLoadInst();
     }
 }

@@ -42,7 +42,7 @@ public class PostunOp extends Operator {
     @Override
     String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
         StringBuilder asm = new StringBuilder();
-        asm.append("\tlw $t0," + lhs.getAddr() + "\n");
+        asm.append("\t" + getLhs().getLoadInst() + " $t0," + lhs.getAddr() + "\n");
 
         if (getOp().getValue().equals("--")) {
             asm.append("\tli $t1,0x01\n");
@@ -64,8 +64,8 @@ public class PostunOp extends Operator {
         }
 
         String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
-        asm.append("\tsw $t0," + newAddr + "\n");
-        asm.append("\tsw $t2," + lhs.getAddr() + "\n");
+        asm.append("\t" + getStoreInst() + " $t0," + newAddr + "\n");
+        asm.append("\t" + getLhs().getStoreInst() + " $t2," + lhs.getAddr() + "\n");
         ad.setAddr(newAddr);
         return asm.toString();
     }

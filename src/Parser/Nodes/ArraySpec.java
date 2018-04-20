@@ -112,6 +112,8 @@ public class ArraySpec extends ASTNode {
     }
 
     public String getAsm(AsmData ad) {
-        return "";
+        StringBuilder asm = new StringBuilder();
+        if (expr != null) asm.append(expr.getAsm(ad));
+        return asm.toString();
     }
 }

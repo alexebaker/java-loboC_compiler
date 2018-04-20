@@ -4,6 +4,7 @@ import Compiler.*;
 import Errors.Error;
 import Tokenizer.TokenReader;
 import Types.Type;
+import Types.TypeEnum;
 
 
 public class OptElse extends ASTNode {
@@ -46,7 +47,7 @@ public class OptElse extends ASTNode {
 
     public Type getNodeType(CompilerState cs) {
         if (getType() == null) {
-            stmt.getNodeType(cs);
+            return stmt.getNodeType(cs);
         }
         return getType();
     }
@@ -55,11 +56,11 @@ public class OptElse extends ASTNode {
         if (stmt != null) {
             stmt = stmt.foldConstants();
         }
-        return this;
+        return stmt != null ? this : null;
     }
 
     public Object getValue() {
-        return null;
+        return stmt != null ? stmt.getValue() : null;
     }
 
     public Location getLocation() {
@@ -74,6 +75,20 @@ public class OptElse extends ASTNode {
     }
 
     public String getAsm(AsmData ad) {
-        return "";
+        return stmt != null ? stmt.getAsm(ad) : "";
+    }
+
+    public String getLoadInst() {
+        if (stmt.getType() != null && stmt.getType().getTypeEnum() == TypeEnum.BOOL) {
+            return "lbu";
+        }
+        return "lw";
+    }
+
+    public String getStoreInst() {
+        if (stmt.getType() != null && stmt.getType().getTypeEnum() == TypeEnum.BOOL) {
+            return "sb";
+        }
+        return "sw";
     }
 }

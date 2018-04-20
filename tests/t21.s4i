@@ -1,2 +1,21 @@
-signed a,b,c,d;
-a+-b/(c*d*a*-1)-23+b*d/c;
+bool[2][3][4] a;
+bool[3][2][] b;
+
+// c-like indexing
+a[1];
+a[1][2];
+a[1][2][3];
+
+b[];
+b[][1];
+b[][1][2];
+
+// proposed right to left indexing
+a[1];
+a[2][1];
+a[3][2][1];
+
+b[];
+b[1][];
+b[2][1][];
+

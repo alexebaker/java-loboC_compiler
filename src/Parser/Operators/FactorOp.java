@@ -89,8 +89,8 @@ public class FactorOp extends Operator {
     @Override
     String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
         StringBuilder asm = new StringBuilder();
-        asm.append("\tlw $t0," + lhs.getAddr() + "\n");
-        asm.append("\tlw $t1," + rhs.getAddr() + "\n");
+        asm.append("\t" + getLhs().getLoadInst() + " $t0," + lhs.getAddr() + "\n");
+        asm.append("\t" + getRhs().getLoadInst() + " $t1," + rhs.getAddr() + "\n");
 
         if (getOp().getValue().equals("*")) {
             if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
@@ -110,7 +110,7 @@ public class FactorOp extends Operator {
         }
 
         String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
-        asm.append("\tsw $t3," + newAddr + "\n");
+        asm.append("\t" + getStoreInst() + " $t3," + newAddr + "\n");
         ad.setAddr(newAddr);
         return asm.toString();
     }

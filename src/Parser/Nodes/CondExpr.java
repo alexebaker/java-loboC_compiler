@@ -177,9 +177,20 @@ public class CondExpr extends ASTNode {
             if (expr != null && condExpr != null) {
                 AsmData exprAD = new AsmData(ad);
                 AsmData condAD = new AsmData(ad);
+                String lbl1 = "label" + ad.getLabelCounter();
+                String lbl2 = "label" + ad.getLabelCounter();
+                asm.append("\t" + logOrExpr.getLoadInst() + " $t0," + logOrAD.getAddr() + "\n");
+                asm.append("\tbeq $0,$t0," + lbl1 + "\n");
                 asm.append(expr.getAsm(exprAD));
+                asm.append("\t" + expr.getLoadInst() + " $t1," + exprAD.getAddr() + "\n");
+                asm.append("\tj " + lbl2 + "\n");
+                asm.append(lbl1 + ":\n");
                 asm.append(condExpr.getAsm(condAD));
-                // ternary asm here
+                asm.append("\t" + condExpr.getLoadInst() + " $t1," + condAD.getAddr() + "\n");
+                asm.append(lbl2 + ":\n");
+                String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getType())).getAddr();
+                asm.append("\t" + getStoreInst() + "$t1," + newAddr + "\n");
+                ad.setAddr(newAddr);
             }
             else {
                 ad.setAddr(logOrAD.getAddr());

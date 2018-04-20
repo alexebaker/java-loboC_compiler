@@ -81,10 +81,9 @@ public class PostfixExpr extends ASTNode {
             if (primaryExpr != null) {
                 Type type = primaryExpr.getNodeType(cs);
                 if (arraySpec != null && type != null) {
-                    type = type.deRef();
-                    if (type != null && arraySpec.getValue() != null) {
+                    if (type.deRef() != null && arraySpec.getValue() != null) {
                         try {
-                            if (((int) arraySpec.getValue()) >= ((ArrayType) type).getArraySize()) {
+                            if (((int) arraySpec.getValue()) >= ((ArrayType) type.deRef()).getArraySize()) {
                                 setType(new Type(TypeEnum.UNDEF));
                                 String msg = "Array index out of bounds!";
                                 cs.addError(new TypeError(msg, primaryExpr.getLocation()));
@@ -92,15 +91,8 @@ public class PostfixExpr extends ASTNode {
                             }
                         } catch (ClassCastException e) { }
                     }
+                    setType(type.deRef());
                 }
-
-                if (postfixExpr != null) {
-                    Type tmp = postfixExpr.getNodeType(cs);
-                    tmp.setOfType(type);
-                    type = tmp;
-                }
-
-                setType(type);
             }
         }
         return getType();
@@ -141,18 +133,50 @@ public class PostfixExpr extends ASTNode {
         if (primaryExpr != null) {
             AsmData primaryAD = new AsmData(ad);
             asm.append(primaryExpr.getAsm(primaryAD));
+            ad.setAddr(primaryAD.getAddr());
+
+            if (arraySpec != null) {
+                if (primaryExpr.getType().getTypeEnum() == TypeEnum.ARRAY) {
+                    Type deRefType = primaryExpr.getType().deRef();
+                    String load = deRefType.getTypeEnum() == TypeEnum.BOOL ? "lbu" : "lw";
+                    String store = deRefType.getTypeEnum() == TypeEnum.BOOL ? "sb" : "sw";
+                    String stepSize = "0x0" + Integer.toHexString(deRefType.getSize());
+                    AsmData arrayAD = new AsmData(ad);
+                    asm.append(arraySpec.getAsm(arrayAD));
+                    asm.append("\tla $t0," + primaryAD.getAddr() + "\n");
+                    asm.append("\t" + arraySpec.getLoadInst() + " $t1," + arrayAD.getAddr() + "\n");
+                    asm.append("\tli $t2," + stepSize + "\n");
+                    asm.append("\tmul $t3,$t1,$t2\n");
+                    asm.append("\tadd $t4,$t0,$t3\n");
+                    asm.append("\t" + load + " $t5,0($t4)\n");
+                    String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(deRefType)).getAddr();
+                    asm.append("\t" + store + " $t5," + newAddr + "\n");
+                    ad.setAddr(newAddr);
+                }
+                else if (primaryExpr.getType().getTypeEnum() == TypeEnum.POINTER) {
+                    Type pointerType = primaryExpr.getType();
+                    asm.append("\tla $t0," + primaryAD.getAddr() + "\n");
+                    String load;
+                    String store;
+                    if (pointerType.deRef().getTypeEnum() == TypeEnum.BOOL) {
+                        load = "lbu";
+                        store = "sb";
+                    }
+                    else {
+                        load = "lw";
+                        store = "sw";
+                    }
+                    asm.append("\t" + load + " $t1,0($t0)\n");
+                    String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(pointerType)).getAddr();
+                    asm.append("\t" + store + " $t1," + newAddr + "\n");
+                    ad.setAddr(newAddr);
+                }
+            }
+
             if (postfixExpr != null) {
                 AsmData postfixAD = new AsmData(ad);
                 asm.append(postfixExpr.getAsm(postfixAD));
                 ad.setAddr(postfixAD.getAddr());
-            }
-            else if (arraySpec != null) {
-                AsmData arrayAD = new AsmData(ad);
-                asm.append(arraySpec.getAsm(arrayAD));
-                ad.setAddr(arrayAD.getAddr());
-            }
-            else {
-                ad.setAddr(primaryAD.getAddr());
             }
         }
         return asm.toString();

@@ -116,6 +116,24 @@ public class WhileStmt extends ASTNode {
     }
 
     public String getAsm(AsmData ad) {
-        return "";
+        StringBuilder asm = new StringBuilder();
+        if (expr != null && stmt != null) {
+            AsmData exprAD = new AsmData(ad);
+            AsmData stmtAD = new AsmData(ad);
+            String lbl1 = "label" + ad.getLabelCounter();
+            String lbl2 = "label" + ad.getLabelCounter();
+            String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(stmt.getType())).getAddr();
+            asm.append(lbl1 + ":\n");
+            asm.append(expr.getAsm(exprAD));
+            asm.append("\t" + expr.getLoadInst() + " $t0," + exprAD.getAddr() + "\n");
+            asm.append("\tbeq $0,$t0," + lbl2 + "\n");
+            asm.append(stmt.getAsm(stmtAD));
+            asm.append("\t" + stmt.getLoadInst() + " $t1," + stmtAD.getAddr() + "\n");
+            asm.append("\t" + stmt.getStoreInst() + " $t1," + newAddr + "\n");
+            asm.append("\tj " + lbl1 + "\n");
+            asm.append(lbl2 + ":\n");
+            ad.setAddr(newAddr);
+        }
+        return asm.toString();
     }
 }
