@@ -154,6 +154,9 @@ public class Operator extends ASTNode {
     }
 
     public boolean isAssignable() {
+        if (getOp().getValue().equals(",")) {
+            return getRhs().isAssignable();
+        }
         return false;
     }
 

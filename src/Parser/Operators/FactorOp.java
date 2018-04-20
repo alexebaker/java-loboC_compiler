@@ -93,7 +93,7 @@ public class FactorOp extends Operator {
         asm.append("\t" + getRhs().getLoadInst() + " $t1," + rhs.getAddr() + "\n");
 
         if (getOp().getValue().equals("*")) {
-            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+            if (getNodeType(null).getTypeEnum() == TypeEnum.UNSIGNED) {
                 asm.append("\tmul $t3,$t0,$t1\n");
             }
             else {

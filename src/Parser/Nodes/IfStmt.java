@@ -5,6 +5,7 @@ import Errors.Error;
 import Errors.SyntaxError;
 import Tokenizer.TokenReader;
 import Types.Type;
+import Types.TypeEnum;
 
 
 public class IfStmt extends ASTNode {
@@ -151,13 +152,12 @@ public class IfStmt extends ASTNode {
             AsmData stmtAD = new AsmData(ad);
             String lbl1 = "label" + ad.getLabelCounter();
             String lbl2 = "label" + ad.getLabelCounter();
-            String newAddr;
+            String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(new Type(TypeEnum.UNSIGNED))).getAddr();
             asm.append(expr.getAsm(exprAD));
             asm.append("\t" + expr.getLoadInst() + " $t0," + exprAD.getAddr() + "\n");
             asm.append("\tbeq $0,$t0," + lbl1 + "\n");
             asm.append(stmt.getAsm(stmtAD));
             asm.append("\t" + stmt.getLoadInst() + " $t1," + stmtAD.getAddr() + "\n");
-            newAddr = ad.getSt().getTmp(ad.getSt().addTmp(stmt.getType())).getAddr();
             asm.append("\t" + stmt.getStoreInst() + " $t1," + newAddr + "\n");
             asm.append("\tj " + lbl2 + "\n");
             asm.append(lbl1 + ":\n");

@@ -55,7 +55,7 @@ public class PostunOp extends Operator {
         }
         else if (getOp().getValue().equals("++")) {
             asm.append("\tli $t1,0x01\n");
-            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+            if (getNodeType(null).getTypeEnum() == TypeEnum.UNSIGNED) {
                 asm.append("\taddiu $t2,$t0,0x01\n");
             }
             else {

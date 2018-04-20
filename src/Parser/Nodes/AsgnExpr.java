@@ -126,7 +126,7 @@ public class AsgnExpr extends ASTNode {
     public boolean isAssignable() {
         condExpr = condExpr != null ?  condExpr.foldConstants() : null;
         asgnExpr = asgnExpr != null ? asgnExpr.foldConstants() : null;
-        return condExpr != null && asgnExpr != null && condExpr.isAssignable();
+        return condExpr != null && condExpr.isAssignable();
     }
 
     public String getAsm(AsmData ad) {

@@ -5,6 +5,7 @@ import Errors.Error;
 import Errors.SyntaxError;
 import Tokenizer.TokenReader;
 import Types.Type;
+import Types.TypeEnum;
 
 
 public class WhileStmt extends ASTNode {
@@ -75,7 +76,7 @@ public class WhileStmt extends ASTNode {
     public Type getNodeType(CompilerState cs) {
         if (getType() == null) {
             expr.getNodeType(cs);
-            stmt.getNodeType(cs);
+            setType(stmt.getNodeType(cs));
         }
         return getType();
     }
@@ -122,7 +123,7 @@ public class WhileStmt extends ASTNode {
             AsmData stmtAD = new AsmData(ad);
             String lbl1 = "label" + ad.getLabelCounter();
             String lbl2 = "label" + ad.getLabelCounter();
-            String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(stmt.getType())).getAddr();
+            String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(new Type(TypeEnum.UNSIGNED))).getAddr();
             asm.append(lbl1 + ":\n");
             asm.append(expr.getAsm(exprAD));
             asm.append("\t" + expr.getLoadInst() + " $t0," + exprAD.getAddr() + "\n");
