@@ -155,7 +155,7 @@ public class PostfixExpr extends ASTNode {
                 }
                 else if (primaryExpr.getType().getTypeEnum() == TypeEnum.POINTER) {
                     Type pointerType = primaryExpr.getType();
-                    asm.append("\tla $t0," + primaryAD.getAddr() + "\n");
+                    asm.append("\tlw $t9," + primaryAD.getAddr() + "\n");
                     String load;
                     String store;
                     if (pointerType.deRef().getTypeEnum() == TypeEnum.BOOL) {
@@ -166,10 +166,7 @@ public class PostfixExpr extends ASTNode {
                         load = "lw";
                         store = "sw";
                     }
-                    asm.append("\t" + load + " $t1,0($t0)\n");
-                    String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(pointerType)).getAddr();
-                    asm.append("\t" + store + " $t1," + newAddr + "\n");
-                    ad.setAddr(newAddr);
+                    ad.setAddr("0($t9)");
                 }
             }
 

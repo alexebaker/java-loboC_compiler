@@ -21,7 +21,7 @@ make jar
 Run the project:
 
 ```bash
-java -jar spike5.jar
+java -jar spikeb.jar
 ```
 
 Run the test cases:
@@ -30,58 +30,32 @@ Run the test cases:
 make test
 ```
 
+## Remarks
+
+This code is `mostly` working up through ISEQ 4. I say mostly because I have only tested a very limited number of valid test cases, and multidimensional array indexing is undefined.
+
 
 ## Specification Issues
 
-Since keywords 'true' and 'false' are not used, standard C coneventions for booleans are used whenever a bool is expected
-(e.g. 0 is false, not 0 is true). This includes the cond expression. For example, the following cond expr will be constant folded:
-
-```
-a = 1 ? 2 : 3;
-```
-
-to
-
-```
-a = 2;
-```
-
-The result of a bool expr will also be saved as a 0 or 1. For example:
-
-```
-bool a;
-a = 5==5;
-```
-
-folds to:
-
-```
-a = 1;
-```
-
-and
-
-```
-bool a;
-a = 5==6;
-```
-
-folds to:
-
-```
-a = 0;
-```
-
+The memory layout of multidimensional arrays is currently unclear, so that makes indexing multidimensional arrays difficult. Currently, this code
+has undefined behavior when it comes to multi array indexing
 
 ## Known Bugs
 
-Asignment ('=') Error:
+1. Asignment ('=') Error: *FIXED*
 
-Currently, the code does not check if the left side of the '=' operator is assignable. This means constants can be 'assigned' values without error.
-for example:
+    Currently, the code does not check if the left side of the '=' operator is assignable. This means constants can be 'assigned' values without error.
+    for example:
 
-```
-1 = 3;
-```
+    ```
+    1 = 3;
+    ```
 
-Would be valid in the given the implementation of the grammar and type checking.
+    Would be valid in the given the implementation of the grammar and type checking.
+
+2. NullPointerException
+
+    This code has gotten excesive in the use of null values. The code attempts to check for null values whenever it is used, but due to the wide spread use, it is likely there is
+    a null test that has been missed. While there is not currently any null pointer exceptions for the given test cases, there is `most likely` a test case that will end up with
+    a null pointer exception. Due to the limited amount of time and test cases, this bug has not been found yet.
+

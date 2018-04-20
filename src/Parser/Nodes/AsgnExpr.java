@@ -138,7 +138,8 @@ public class AsgnExpr extends ASTNode {
                 AsmData asgnExprAD = new AsmData(ad);
                 asm.append(asgnExpr.getAsm(asgnExprAD));
                 asm.append("\t" + asgnExpr.getLoadInst() + " $t0," + asgnExprAD.getAddr() + "\n");
-                asm.append("\t" + condExpr.getStoreInst() + " $t0," + condAD.getAddr() + "\n");
+                asm.append("\tla $t1," + condAD.getAddr() + "\n");
+                asm.append("\t" + condExpr.getStoreInst() + " $t0,($t1)\n");
             }
             ad.setAddr(condAD.getAddr());
         }

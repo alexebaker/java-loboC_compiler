@@ -1,10 +1,10 @@
 all: jar
 
-SPIKE:=5
+SPIKE:=b
 
 jar: compile
 	@cp README.md README.txt
-	@jar cvfe spike$(SPIKE).jar Main LICENSE Makefile README.txt sources.txt spike$(SPIKE)a.txt spikeb-10.txt src/ tests/ -C out .
+	@jar cvfe spike$(SPIKE).jar Main LICENSE Makefile README.md README.txt sources.txt spike5a.txt spikeb-10.txt HP_AppA.pdf src/ tests/ tlc/ -C out . > /dev/null
 	@rm README.txt
 
 compile: clean
@@ -17,6 +17,6 @@ clean: FORCE
 	@ find . -name "*.class" -delete
 
 test: jar
-	@cd tlc && ./tlc -c 'java -jar ../spike$(SPIKE).jar' -recursive -test && cd ..
+	@cd tlc && chmod +x tlc && ./tlc -c 'java -jar ../spike$(SPIKE).jar' -recursive -test && cd ..
 
 .PHONY: FORCE
