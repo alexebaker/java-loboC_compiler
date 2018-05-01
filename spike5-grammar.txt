@@ -1,0 +1,52 @@
+   SPIKE4         <- BLOCK EOF
+
+   BLOCK          <- DEFS STATEMENTS
+   DEFS           <- | DEF DEFS
+   STATEMENTS     <- | STATEMENT STATEMENTS
+   DEF            <- VAR_DEF
+   VAR_DEF        <- TYPE_SPEC VAR_NAMES ";"
+   VAR_NAMES      <- VAR_NAME OPT_VAR_NAMES
+   VAR_NAME       <- IDENTIFIER
+   OPT_VAR_NAMES  <- | "," VAR_NAMES
+   TYPE_SPEC      <- TYPE_NAME OPT_ARRAY_SPECS
+   TYPE_NAME      <- PRIM_TYPE
+   PRIM_TYPE      <- "bool" | "unsigned" | "signed"
+
+   STATEMENT      <- "{" BLOCK "}" | EXPR ";" | IF_STMT | WHILE_STMT
+   IF_STMT        <- "if" "(" EXPR ")" STATEMENT OPT_ELSE
+   OPT_ELSE       <- | "else" STATEMENT
+   WHILE_STMT     <- "while" "(" EXPR ")" STATEMENT
+   EXPR           <- ASGN_EXPR | EXPR "," ASGN_EXPR
+   ASGN_EXPR      <- POSTFIX_EXPR "=" ASGN_EXPR | COND_EXPR
+   COND_EXPR      <- LOGOR_EXPR "?" EXPR ":" COND_EXPR | LOGOR_EXPR
+   LOGOR_EXPR     <- LOGAND_EXPR | LOGOR_EXPR "||" LOGAND_EXPR
+   LOGAND_EXPR    <- EQ_EXPR | LOGAND_EXPR "&&" EQ_EXPR
+   EQ_EXPR        <- REL_EXPR | EQ_EXPR EQ_OP REL_EXPR
+   REL_EXPR       <- SIMPLE_EXPR | REL_EXPR REL_OP SIMPLE_EXPR
+   SIMPLE_EXPR    <- TERM | SIMPLE_EXPR TERM_OP TERM
+   TERM           <- EXPO | TERM FACTOR_OP EXPO
+   EXPO           <- FACTOR | EXPO EXPO_OP FACTOR
+   FACTOR         <- POSTFIX_EXPR | PREUN_OP FACTOR
+   POSTFIX_EXPR   <- PRIMARY_EXPR | POSTFIX_EXPR POSTUN_OP | POSTFIX_EXPR ARRAY_SPEC
+   OPT_ARRAY_SPECS<- | ARRAY_SPEC OPT_ARRAY_SPECS
+   ARRAY_SPEC     <- "[" OPT_ARRAY_SIZE "]"
+   OPT_ARRAY_SIZE <- | EXPR
+   PRIMARY_EXPR   <- IDENTIFIER | NUMBER | "(" EXPR ")"
+
+   TERM_OP        <- "+" | "-"
+   FACTOR_OP      <- "*" | "/" | "%"
+   EXPO_OP        <- "**"
+   EQ_OP          <- "==" | "!="
+   REL_OP         <- "<" | "<=" | ">" | ">="
+   PREUN_OP       <- "-" | "--" | "++" | "&"
+   POSTUN_OP      <- "--" | "++" | "!"
+
+   IDENTIFIER     <- {any spike1 IDENTIFIER token}
+   NUMBER         <- {any spike1 NUMBER token}
+
+NOTES:
+
+ - An 'else' keyword token is added in spike4
+
+ - The 'dangling else' ambiguity is handled in LOBO-C as in regular C
+   (and just about every other language to which it applies).

@@ -1,0 +1,106 @@
+spike4-10 LOBO-C LEGAL TYPE PROPAGATIONS
+
+GIVEN:
+
+    X, Y, Z : Arbitrary distinct types
+
+    P, Q :    Arbitrary distinct pointer types
+
+    A, D :    Arbitrary distinct array types
+
+    U, S, B:  unsigned, signed, and bool, respectively
+
+    M, N:     Arbitrary distinct numeric types (either U, S, or B)
+
+ALL OPERAND TYPE-OPERATOR COMBINATIONS NOT COVERED BELOW ARE ILLEGAL
+
+---
+OP: binary +, -, *, /
+
+ U OP U => U
+ U OP S => U
+ S OP U => U
+ S OP S => S
+
+---
+OP: binary ==, !=
+
+ X OP X => B
+ U OP S => B
+ S OP U => B
+
+---
+OP: binary <, <=, >, >=
+
+ U OP U => B
+ S OP S => B
+ P OP P => B
+
+---
+OP: unary - 
+
+  OP U => U     (Even though overflow is implied)
+  OP S => S
+
+---
+OP: pre unary --, ++; post unary --, ++
+
+  OP U => U          U OP => U
+  OP S => S          S OP => S
+  OP P => P          P OP => P
+
+---
+OP: unary &
+
+  &X => X[]     (But the typeEnum X value must be addressable)
+
+---
+OP: post unary []
+
+  P[] => (typeEnum that P points to)
+
+---
+OP: post [expr]
+
+  A[M] => (typeEnum that A is array of)
+
+---
+OP: binary assignment =
+
+  S = M => S
+  U = M => U
+  B = M => B
+  P = P => P
+
+---
+OP: logical &&, ||
+
+  B OP B => B
+
+---
+OP: ?:
+
+  B ? X : X  => X
+
+---
+OP: unary !
+
+  U! => U
+  U! => U
+
+---
+OP: binary **
+
+  U ** U => U
+  S ** U => S
+
+---
+OP: Binary %
+
+  U % U => U
+  U % S => S
+  S % U => U
+  S % S => S
+
+--------------------------------------------
+--------------------------------------------
