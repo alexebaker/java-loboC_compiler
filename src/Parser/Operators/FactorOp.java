@@ -123,6 +123,7 @@ public class FactorOp extends Operator {
         switch (op) {
             case "*":
             case "/":
+            case "%":
                 return true;
             default:
                 return false;

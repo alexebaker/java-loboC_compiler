@@ -43,6 +43,7 @@ public class LiteralToken extends Token {
             case "||":
             case "^":
             case "*":
+            case "**":
             case "%":
             case "/":
             case "+":

@@ -78,6 +78,7 @@ public class PostunOp extends Operator {
         switch (op) {
             case "--":
             case "++":
+            case "!":
                 return true;
             default:
                 return false;
