@@ -19,15 +19,19 @@ public class FactorOp extends Operator {
         if (getType() == null) {
             Type lhs = getLhs().getNodeType(cs);
             Type rhs = getRhs().getNodeType(cs);
-            if (lhs.getTypeEnum() == TypeEnum.UNSIGNED && (rhs.getTypeEnum() == TypeEnum.UNSIGNED || rhs.getTypeEnum() == TypeEnum.SIGNED)) {
-                setType(new PrimType(TypeEnum.UNSIGNED));
-            }
-            else if (lhs.getTypeEnum() == TypeEnum.SIGNED) {
-                if (rhs.getTypeEnum() == TypeEnum.SIGNED) {
-                    setType(new PrimType(TypeEnum.SIGNED));
-                }
-                else if (rhs.getTypeEnum() == TypeEnum.UNSIGNED) {
-                    setType(new PrimType(TypeEnum.UNSIGNED));
+            if (getOp().getValue().equals("%")) {
+                if (lhs.getTypeEnum() == TypeEnum.UNSIGNED || lhs.getTypeEnum() == TypeEnum.SIGNED) {
+                    if (rhs.getTypeEnum() == TypeEnum.UNSIGNED) {
+                        setType(new PrimType(TypeEnum.UNSIGNED));
+                    }
+                    else if (rhs.getTypeEnum() == TypeEnum.SIGNED) {
+                        setType(new PrimType(TypeEnum.SIGNED));
+                    }
+                    else {
+                        setType(new Type(TypeEnum.UNDEF));
+                        String msg = "Cannot apply operator '" + getOp() + "' to types '" + lhs + "' and '" + rhs + "'";
+                        cs.addError(new TypeError(msg, getLocation()));
+                    }
                 }
                 else {
                     setType(new Type(TypeEnum.UNDEF));
@@ -36,9 +40,23 @@ public class FactorOp extends Operator {
                 }
             }
             else {
-                setType(new Type(TypeEnum.UNDEF));
-                String msg = "Cannot apply operator '" + getOp() + "' to types '" + lhs + "' and '" + rhs + "'";
-                cs.addError(new TypeError(msg, getLocation()));
+                if (lhs.getTypeEnum() == TypeEnum.UNSIGNED && (rhs.getTypeEnum() == TypeEnum.UNSIGNED || rhs.getTypeEnum() == TypeEnum.SIGNED)) {
+                    setType(new PrimType(TypeEnum.UNSIGNED));
+                } else if (lhs.getTypeEnum() == TypeEnum.SIGNED) {
+                    if (rhs.getTypeEnum() == TypeEnum.SIGNED) {
+                        setType(new PrimType(TypeEnum.SIGNED));
+                    } else if (rhs.getTypeEnum() == TypeEnum.UNSIGNED) {
+                        setType(new PrimType(TypeEnum.UNSIGNED));
+                    } else {
+                        setType(new Type(TypeEnum.UNDEF));
+                        String msg = "Cannot apply operator '" + getOp() + "' to types '" + lhs + "' and '" + rhs + "'";
+                        cs.addError(new TypeError(msg, getLocation()));
+                    }
+                } else {
+                    setType(new Type(TypeEnum.UNDEF));
+                    String msg = "Cannot apply operator '" + getOp() + "' to types '" + lhs + "' and '" + rhs + "'";
+                    cs.addError(new TypeError(msg, getLocation()));
+                }
             }
         }
         return getType();
@@ -77,6 +95,16 @@ public class FactorOp extends Operator {
             if (lhv != null && rhv != null) {
                 try {
                     return (int) lhv / (int) rhv;
+                }
+                catch (ClassCastException|ArithmeticException e) {
+                    return null;
+                }
+            }
+        }
+        else if (getOp().getValue().equals("%")) {
+            if (lhv != null && rhv != null) {
+                try {
+                    return (int) lhv % (int) rhv;
                 }
                 catch (ClassCastException|ArithmeticException e) {
                     return null;

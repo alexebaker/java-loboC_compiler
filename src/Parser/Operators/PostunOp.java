@@ -16,13 +16,24 @@ public class PostunOp extends Operator {
     public Type getNodeType(CompilerState cs) {
         if (getType() == null) {
             Type type = getLhs().getNodeType(cs);
-            if (PointerType.isType(type) || type.getTypeEnum() == TypeEnum.UNSIGNED || type.getTypeEnum() == TypeEnum.SIGNED) {
-                setType(type);
+            if (getOp().getValue().equals("!")) {
+                if (type.getTypeEnum() == TypeEnum.UNSIGNED) {
+                    setType(type);
+                }
+                else {
+                    setType(new Type(TypeEnum.UNDEF));
+                    String msg = "Cannot apply operator '" + getOp() + "' to type '" + type + "'";
+                    cs.addError(new TypeError(msg, getLocation()));
+                }
             }
             else {
-                setType(new Type(TypeEnum.UNDEF));
-                String msg = "Cannot apply operator '" + getOp() + "' to type '" + type + "'";
-                cs.addError(new TypeError(msg, getLocation()));
+                if (PointerType.isType(type) || type.getTypeEnum() == TypeEnum.UNSIGNED || type.getTypeEnum() == TypeEnum.SIGNED) {
+                    setType(type);
+                } else {
+                    setType(new Type(TypeEnum.UNDEF));
+                    String msg = "Cannot apply operator '" + getOp() + "' to type '" + type + "'";
+                    cs.addError(new TypeError(msg, getLocation()));
+                }
             }
         }
         return getType();
@@ -36,6 +47,22 @@ public class PostunOp extends Operator {
 
     @Override
     public Object getValue() {
+        Object lhv = getLhv();
+
+        if (getOp().getValue().equals("!") && lhv != null) {
+            try {
+                int factor = 1;
+                int x = (int) lhv;
+
+                for (int i = 1; i <= x; i++) {
+                    factor *= i;
+                }
+                return factor;
+            }
+            catch (ClassCastException e) {
+                return null;
+            }
+        }
         return null;
     }
 
