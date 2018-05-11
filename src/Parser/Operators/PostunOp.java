@@ -5,6 +5,7 @@ import Errors.TypeError;
 import Parser.Nodes.ASTNode;
 import Tokenizer.Tokens.Token;
 import Types.PointerType;
+import Types.PrimType;
 import Types.Type;
 import Types.TypeEnum;
 
@@ -17,8 +18,8 @@ public class PostunOp extends Operator {
         if (getType() == null) {
             Type type = getLhs().getNodeType(cs);
             if (getOp().getValue().equals("!")) {
-                if (type.getTypeEnum() == TypeEnum.UNSIGNED) {
-                    setType(type);
+                if (type.getTypeEnum() == TypeEnum.UNSIGNED || type.getTypeEnum() == TypeEnum.SIGNED) {
+                    setType(new PrimType(TypeEnum.UNSIGNED));
                 }
                 else {
                     setType(new Type(TypeEnum.UNDEF));
@@ -69,6 +70,7 @@ public class PostunOp extends Operator {
     @Override
     String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
         StringBuilder asm = new StringBuilder();
+        String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
         asm.append("\t" + getLhs().getLoadInst() + " $t0," + lhs.getAddr() + "\n");
 
         if (getOp().getValue().equals("--")) {
@@ -79,6 +81,8 @@ public class PostunOp extends Operator {
             else {
                 asm.append("\tsub $t2,$t0,$t1\n");
             }
+            asm.append("\t" + getStoreInst() + " $t0," + newAddr + "\n");
+            asm.append("\t" + getLhs().getStoreInst() + " $t2," + lhs.getAddr() + "\n");
         }
         else if (getOp().getValue().equals("++")) {
             asm.append("\tli $t1,0x01\n");
@@ -88,11 +92,31 @@ public class PostunOp extends Operator {
             else {
                 asm.append("\taddi $t2,$t0,0x01\n");
             }
+            asm.append("\t" + getStoreInst() + " $t0," + newAddr + "\n");
+            asm.append("\t" + getLhs().getStoreInst() + " $t2," + lhs.getAddr() + "\n");
+        }
+        else if (getOp().getValue().equals("!")) {
+            String lbl1 = "label" + ad.getLabelCounter();
+            String lbl2 = "label" + ad.getLabelCounter();
+            asm.append("\tmove $t1,$t0\n");
+            asm.append("\tli $t2,0x01\n");
+            asm.append("\tsw $t2," + newAddr + "\n");
+            asm.append(lbl1 + ":\n");
+            if (getLhs().getNodeType(null).getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tbleu $t1,$0," + lbl2 + "\n");
+            }
+            else {
+                asm.append("\tble $t1,$0," + lbl2 + "\n");
+            }
+            asm.append("\tmul $t3,$t1,$t2\n");
+            asm.append("\tmove $t2,$t3\n");
+            asm.append("\taddi $t4,$t1,-0x01\n");
+            asm.append("\tmove $t1,$t4\n");
+            asm.append("\t" + getStoreInst() + " $t2," + newAddr + "\n");
+            asm.append("\tj " + lbl1 + "\n");
+            asm.append(lbl2 + ":\n");
         }
 
-        String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
-        asm.append("\t" + getStoreInst() + " $t0," + newAddr + "\n");
-        asm.append("\t" + getLhs().getStoreInst() + " $t2," + lhs.getAddr() + "\n");
         ad.setAddr(newAddr);
         return asm.toString();
     }

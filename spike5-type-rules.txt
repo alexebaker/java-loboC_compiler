@@ -86,6 +86,7 @@ OP: ?:
 OP: unary !
 
   U! => U
+  S! => U
 
 ---
 OP: binary **

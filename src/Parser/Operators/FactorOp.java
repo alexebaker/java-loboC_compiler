@@ -136,6 +136,14 @@ public class FactorOp extends Operator {
                 asm.append("\tdiv $t3,$t0,$t1\n");
             }
         }
+        else if (getOp().getValue().equals("%")) {
+            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tremu $t3,$t0,$t1\n");
+            }
+            else {
+                asm.append("\trem $t3,$t0,$t1\n");
+            }
+        }
 
         String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
         asm.append("\t" + getStoreInst() + " $t3," + newAddr + "\n");

@@ -69,6 +69,30 @@ public class ExpoOp extends Operator {
     @Override
     String applyAsmOp(AsmData ad, AsmData lhs, AsmData rhs) {
         StringBuilder asm = new StringBuilder();
+        String newAddr = ad.getSt().getTmp(ad.getSt().addTmp(getNodeType(null))).getAddr();
+        asm.append("\t" + getLhs().getLoadInst() + " $t0," + lhs.getAddr() + "\n");
+        asm.append("\t" + getRhs().getLoadInst() + " $t1," + rhs.getAddr() + "\n");
+        String lbl1 = "label" + ad.getLabelCounter();
+        String lbl2 = "label" + ad.getLabelCounter();
+        asm.append("\tmove $t2,$0\n");
+        asm.append("\tmove $t5,$t0\n");
+        asm.append("\tli $t6,0x01\n");
+        asm.append("\tsw $t6," + newAddr + "\n");
+        asm.append(lbl1 + ":\n");
+        asm.append("\tbgeu $t2,$t1," + lbl2 + "\n");
+        if (getNodeType(null).getTypeEnum() == TypeEnum.UNSIGNED) {
+                asm.append("\tmul $t3,$t0,$t5\n");
+            }
+            else {
+                asm.append("\tmulo $t3,$t0,$t5\n");
+            }
+        asm.append("\tmove $t5,$t3\n");
+        asm.append("\taddi $t4,$t2,0x01\n");
+        asm.append("\tmove $t2,$t4\n");
+        asm.append("\t" + getStoreInst() + " $t5," + newAddr + "\n");
+        asm.append("\tj " + lbl1 + "\n");
+        asm.append(lbl2 + ":\n");
+        ad.setAddr(newAddr);
         return asm.toString();
     }
 
