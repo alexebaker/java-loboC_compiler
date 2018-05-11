@@ -114,7 +114,7 @@ public class RelOp extends Operator {
         asm.append("\t" + getRhs().getLoadInst() + " $t1," + rhs.getAddr() + "\n");
 
         if (getOp().getValue().equals("<")) {
-            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+            if (getLhs().getType().getTypeEnum() == TypeEnum.UNSIGNED) {
                 asm.append("\tsltu $t3,$t0,$t1\n");
             }
             else {
@@ -122,7 +122,7 @@ public class RelOp extends Operator {
             }
         }
         else if (getOp().getValue().equals("<=")) {
-            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+            if (getLhs().getType().getTypeEnum() == TypeEnum.UNSIGNED) {
                 asm.append("\tsleu $t3,$t0,$t1\n");
             }
             else {
@@ -130,7 +130,7 @@ public class RelOp extends Operator {
             }
         }
         else if (getOp().getValue().equals(">")) {
-            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+            if (getLhs().getType().getTypeEnum() == TypeEnum.UNSIGNED) {
                 asm.append("\tsgtu $t3,$t0,$t1\n");
             }
             else {
@@ -138,7 +138,7 @@ public class RelOp extends Operator {
             }
         }
         else if (getOp().getValue().equals(">=")) {
-            if (getType().getTypeEnum() == TypeEnum.UNSIGNED) {
+            if (getLhs().getType().getTypeEnum() == TypeEnum.UNSIGNED) {
                 asm.append("\tsgeu $t3,$t0,$t1\n");
             }
             else {

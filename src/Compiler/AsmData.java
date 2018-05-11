@@ -22,7 +22,7 @@ public class AsmData {
         this.ifFalse = ifFalse;
         this.ft = ft;
         this.st = st;
-        this.addr = "";
+        this.addr = "0($gp)";
         this.labelCounter = 0;
     }
 

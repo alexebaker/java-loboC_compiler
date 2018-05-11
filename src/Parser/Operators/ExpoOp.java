@@ -75,12 +75,12 @@ public class ExpoOp extends Operator {
         String lbl1 = "label" + ad.getLabelCounter();
         String lbl2 = "label" + ad.getLabelCounter();
         asm.append("\tmove $t2,$0\n");
-        asm.append("\tmove $t5,$t0\n");
-        asm.append("\tli $t6,0x01\n");
-        asm.append("\tsw $t6," + newAddr + "\n");
+        asm.append("\tli $t5,0x01\n");
+        asm.append("\tli $t3,0x01\n");
+        asm.append("\tsw $t3," + newAddr + "\n");
         asm.append(lbl1 + ":\n");
         asm.append("\tbgeu $t2,$t1," + lbl2 + "\n");
-        if (getNodeType(null).getTypeEnum() == TypeEnum.UNSIGNED) {
+        if (getLhs().getNodeType(null).getTypeEnum() == TypeEnum.UNSIGNED) {
                 asm.append("\tmul $t3,$t0,$t5\n");
             }
             else {
